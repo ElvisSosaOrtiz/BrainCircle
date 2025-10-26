@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.BrainCircle" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.BrainCircle.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_screen_bg_color</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_screen_bg_color</item>
+        <item name="postSplashScreenTheme">@style/Theme.BrainCircle</item>
+    </style>
 </resources>
