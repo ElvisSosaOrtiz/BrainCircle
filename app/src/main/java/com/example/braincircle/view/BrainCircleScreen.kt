@@ -26,8 +26,8 @@ import com.example.braincircle.R
 
 enum class BrainCircleScreen(@param:StringRes val title: Int) {
     Start(title = R.string.app_name),
-    SignIn(title = R.string.sign_in),
-    SignUp(title = R.string.sign_up)
+    SignIn(title = R.string.sign_in_title),
+    SignUp(title = R.string.sign_up_title)
 }
 
 @Composable
@@ -39,9 +39,7 @@ fun BrainCircleAppBar(
 ) {
     TopAppBar(
         title = {
-            if (currentScreen != BrainCircleScreen.Start &&
-                currentScreen != BrainCircleScreen.SignIn &&
-                currentScreen != BrainCircleScreen.SignUp) {
+            if (currentScreen != BrainCircleScreen.Start) {
                 Text(stringResource(currentScreen.title))
             }
         },

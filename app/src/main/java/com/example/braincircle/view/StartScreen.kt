@@ -1,23 +1,23 @@
 package com.example.braincircle.view
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -49,29 +49,53 @@ fun StartScreen(
         )
         Spacer(modifier = Modifier.height(32.dp))
         Column {
-            OutlinedButton(
+            FilledTonalButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 48.dp),
-                border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onPrimaryContainer),
+                colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
+                elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
                 onClick = onSignInButtonClicked
             ) {
                 Text(
                     text = stringResource(R.string.sign_in),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
-            OutlinedButton(
+            FilledTonalButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 48.dp),
-                border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onPrimaryContainer),
+                colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
+                elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
                 onClick = onSignUpButtonClicked
             ) {
                 Text(
                     text = stringResource(R.string.sign_up),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
+            }
+            FilledTonalButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
+                elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
+                onClick = { }
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(R.drawable.google__g__logo),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.padding(horizontal = 4.dp))
+                    Text(
+                        text = stringResource(R.string.sign_in_with_google),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     }

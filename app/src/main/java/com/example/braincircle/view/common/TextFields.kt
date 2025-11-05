@@ -1,6 +1,8 @@
 package com.example.braincircle.view.common
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -12,14 +14,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 import com.example.braincircle.R
 
 @Composable
@@ -29,23 +33,30 @@ fun EmailField(
     modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp),
         singleLine = true,
-        modifier = modifier,
         value = value,
         onValueChange = { onValueChange(it) },
-        placeholder = { Text(stringResource(R.string.email)) },
-        leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = stringResource(R.string.email)) }
+        label = { Text(stringResource(R.string.email)) },
+        leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = stringResource(R.string.email)) },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+        )
     )
 }
 
 @Composable
 fun PasswordField(
     value: String,
-    @StringRes placeholder: Int,
+    nextIsPasswordRepeat: Boolean,
+    @StringRes label: Int,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isVisible by remember { mutableStateOf(false) }
+    var isVisible by rememberSaveable { mutableStateOf(false) }
 
     val icon =
         if (isVisible) painterResource(R.drawable.ic_visibility_on)
@@ -55,17 +66,22 @@ fun PasswordField(
         if (isVisible) VisualTransformation.None else PasswordVisualTransformation()
 
     OutlinedTextField(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp),
         value = value,
         onValueChange = { onValueChange(it) },
-        placeholder = { Text(text = stringResource(placeholder)) },
+        label = { Text(text = stringResource(label)) },
         leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = stringResource(R.string.lock)) },
         trailingIcon = {
-            IconButton(onClick = { !isVisible }) {
+            IconButton(onClick = { isVisible = !isVisible }) {
                 Icon(painter = icon, contentDescription = stringResource(R.string.visibility))
             }
         },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = if (nextIsPasswordRepeat) ImeAction.Next else ImeAction.Done
+        ),
         visualTransformation = visualTransformation
     )
 }
