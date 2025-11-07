@@ -13,4 +13,5 @@
     <string name="sign_in_title">Sign in to your account</string>
     <string name="sign_up_title">Create a new account</string>
     <string name="repeat_password">Repeat password</string>
+    <string name="find_groups_title">Find groups</string>
 </resources>

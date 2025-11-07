@@ -21,16 +21,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.braincircle.R
-import com.example.braincircle.ui.theme.BrainCircleTheme
 import com.example.braincircle.view.common.EmailField
 import com.example.braincircle.view.common.PasswordField
 
 @Composable
 fun SignInScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSignInClick: () -> Unit
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -61,7 +60,7 @@ fun SignInScreen(
                 .padding(horizontal = 48.dp),
             colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
             elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-            onClick = {}
+            onClick = onSignInClick
         ) {
             Text(
                 text = stringResource(R.string.sign_in),
@@ -119,17 +118,3 @@ fun SignUpScreen(modifier: Modifier = Modifier) {
         }
     }
 }
-
-@Preview(showBackground = true /*uiMode = Configuration.UI_MODE_NIGHT_YES*/)
-@Composable
-fun SignInPreview() {
-    BrainCircleTheme {
-        SignInScreen()
-    }
-}
-
-//@Preview
-//@Composable
-//fun SignUpPreview() {
-//    SignUpScreen()
-//}

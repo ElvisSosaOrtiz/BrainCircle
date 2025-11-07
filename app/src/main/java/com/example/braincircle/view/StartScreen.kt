@@ -29,8 +29,8 @@ import com.example.braincircle.ui.theme.BrainCircleTheme
 
 @Composable
 fun StartScreen(
-    onSignInButtonClicked: () -> Unit,
-    onSignUpButtonClicked: () -> Unit,
+    onSignInButtonClick: () -> Unit,
+    onSignUpButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -55,7 +55,7 @@ fun StartScreen(
                     .padding(horizontal = 48.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                 elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-                onClick = onSignInButtonClicked
+                onClick = onSignInButtonClick
             ) {
                 Text(
                     text = stringResource(R.string.sign_in),
@@ -68,7 +68,7 @@ fun StartScreen(
                     .padding(horizontal = 48.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                 elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-                onClick = onSignUpButtonClicked
+                onClick = onSignUpButtonClick
             ) {
                 Text(
                     text = stringResource(R.string.sign_up),
@@ -106,8 +106,8 @@ fun StartScreen(
 fun StartScreenPreview() {
     BrainCircleTheme {
         StartScreen(
-            onSignInButtonClicked = {},
-            onSignUpButtonClicked = {}
+            onSignInButtonClick = {},
+            onSignUpButtonClick = {}
         )
     }
 }
