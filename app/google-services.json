@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "779077593097",
+    "project_id": "braincircle-9cc14",
+    "storage_bucket": "braincircle-9cc14.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779077593097:android:c68cad86fb74e1065af0d8",
+        "android_client_info": {
+          "package_name": "com.example.braincircle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779077593097-k58dk443aj5iptsjbhk5jm8q1mtpn126.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMkxCCuxA-YlJrHNyhKWdKf3Z0GAvayME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "779077593097-k58dk443aj5iptsjbhk5jm8q1mtpn126.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

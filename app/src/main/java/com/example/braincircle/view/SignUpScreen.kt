@@ -27,50 +27,6 @@ import com.example.braincircle.view.common.EmailField
 import com.example.braincircle.view.common.PasswordField
 
 @Composable
-fun SignInScreen(
-    modifier: Modifier = Modifier,
-    onSignInClick: () -> Unit
-) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        EmailField(
-            value = email,
-            onValueChange = { email = it }
-        )
-        Spacer(Modifier.padding(vertical = 8.dp))
-        PasswordField(
-            value = password,
-            nextIsPasswordRepeat = false,
-            label = R.string.password,
-            onValueChange = { password = it }
-        )
-        Spacer(Modifier.padding(vertical = 16.dp))
-        FilledTonalButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
-            elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-            onClick = onSignInClick
-        ) {
-            Text(
-                text = stringResource(R.string.sign_in),
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
-}
-
-@Composable
 fun SignUpScreen(modifier: Modifier = Modifier) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
