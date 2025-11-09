@@ -19,7 +19,11 @@ class AuthRepositoryImpl @Inject constructor(private val auth: FirebaseAuth) : A
                         null?.let { it(cause) }
                     }
                 } else {
-                    continuation.resume(Result.failure(task.exception ?: Exception("Unknown exception"))) { cause, _, _ ->
+                    continuation.resume(
+                        Result.failure(
+                            task.exception ?: Exception("Unknown exception")
+                        )
+                    ) { cause, _, _ ->
                         null?.let { it(cause) }
                     }
                 }
@@ -38,7 +42,11 @@ class AuthRepositoryImpl @Inject constructor(private val auth: FirebaseAuth) : A
                         null?.let { it(cause) }
                     }
                 } else {
-                    continuation.resume(Result.failure(task.exception ?: Exception("Unknown error"))) { cause, _, _ ->
+                    continuation.resume(
+                        Result.failure(
+                            task.exception ?: Exception("Unknown error")
+                        )
+                    ) { cause, _, _ ->
                         null?.let { it(cause) }
                     }
                 }
@@ -55,7 +63,31 @@ class AuthRepositoryImpl @Inject constructor(private val auth: FirebaseAuth) : A
                         null?.let { it(cause) }
                     }
                 } else {
-                    continuation.resume(Result.failure(task.exception ?: Exception("Unknown error"))) { cause, _, _ ->
+                    continuation.resume(
+                        Result.failure(
+                            task.exception ?: Exception("Unknown error")
+                        )
+                    ) { cause, _, _ ->
+                        null?.let { it(cause) }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun sendPasswordReset(email: String): Result<Unit?> {
+        return suspendCancellableCoroutine { continuation ->
+            auth.sendPasswordResetEmail(email).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    continuation.resume(Result.success(null)) { cause, _, _ ->
+                        null?.let { it(cause) }
+                    }
+                } else {
+                    continuation.resume(
+                        Result.failure(
+                            task.exception ?: Exception("Unknown error")
+                        )
+                    ) { cause, _, _ ->
                         null?.let { it(cause) }
                     }
                 }

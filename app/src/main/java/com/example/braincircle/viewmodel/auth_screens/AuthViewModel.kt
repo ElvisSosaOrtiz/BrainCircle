@@ -16,6 +16,10 @@ class AuthViewModel @Inject constructor(private val repo: AuthRepository) : View
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    init {
+        checkCurrentUser()
+    }
+
     fun checkCurrentUser() {
         repo.currentUser()?.let {
             _uiState.value = AuthUiState.Success(it)
@@ -48,6 +52,20 @@ class AuthViewModel @Inject constructor(private val repo: AuthRepository) : View
         }
     }
 
+    fun sendPasswordReset(email: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val res = repo.sendPasswordReset(email.trim())
+            if (res.isSuccess) {
+                _uiState.value = AuthUiState.Message("Password reset email sent to $email")
+            } else {
+                _uiState.value = AuthUiState.Error(
+                    res.exceptionOrNull()?.localizedMessage ?: "Error sending reset email"
+                )
+            }
+        }
+    }
+
     fun signOut() {
         repo.signOut()
         _uiState.value = AuthUiState.Idle
@@ -59,7 +77,9 @@ class AuthViewModel @Inject constructor(private val repo: AuthRepository) : View
             if (user != null) _uiState.value = AuthUiState.Success(user)
             else _uiState.value = AuthUiState.Error("Authentication succeeded but user is null")
         } else {
-            _uiState.value = AuthUiState.Error(result.exceptionOrNull()?.localizedMessage ?: "Authentication failed")
+            _uiState.value = AuthUiState.Error(
+                result.exceptionOrNull()?.localizedMessage ?: "Authentication failed"
+            )
         }
     }
 
