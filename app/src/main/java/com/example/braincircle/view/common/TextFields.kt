@@ -3,6 +3,7 @@ package com.example.braincircle.view.common
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -29,6 +30,7 @@ import com.example.braincircle.R
 @Composable
 fun EmailField(
     value: String,
+    nextIsPassword: Boolean,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -36,6 +38,7 @@ fun EmailField(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 48.dp),
+        shape = RoundedCornerShape(50.dp),
         singleLine = true,
         value = value,
         onValueChange = { onValueChange(it) },
@@ -43,7 +46,7 @@ fun EmailField(
         leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = stringResource(R.string.email)) },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
-            imeAction = ImeAction.Next
+            imeAction = if (nextIsPassword) ImeAction.Next else ImeAction.Done
         )
     )
 }
@@ -69,6 +72,7 @@ fun PasswordField(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 48.dp),
+        shape = RoundedCornerShape(50.dp),
         value = value,
         onValueChange = { onValueChange(it) },
         label = { Text(text = stringResource(label)) },

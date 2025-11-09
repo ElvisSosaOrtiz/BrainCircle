@@ -3,8 +3,6 @@
 package com.example.braincircle.view
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,9 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,7 +36,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -51,13 +47,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.braincircle.R
-import kotlin.math.roundToInt
+import com.example.braincircle.viewmodel.auth_screens.AuthViewModel
 
 enum class BrainCircleScreen(@param:StringRes val title: Int) {
-    Start(title = R.string.app_name),
     SignIn(title = R.string.sign_in_title),
     SignUp(title = R.string.sign_up_title),
-    FindGroups(title = R.string.find_groups_title)
+    ResetPassword(title = R.string.reset_password_title),
+    FindGroups(title = R.string.app_name)
 }
 
 @Composable
@@ -65,7 +61,6 @@ fun BrainCircleAppBar(
     currentScreen: BrainCircleScreen,
     canNavigateUp: Boolean,
     navigateUp: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
     isInGroupsListScreen: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -84,114 +79,97 @@ fun BrainCircleAppBar(
             focusManager.clearFocus()
         }
     }
-
-    Crossfade(
-        modifier = Modifier.animateContentSize(),
-        targetState = isSearch,
-        label = "Search"
-    ) { target ->
-        if (target) {
-            Row(
+    if (isSearch) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .windowInsetsPadding(TopAppBarDefaults.windowInsets),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .windowInsetsPadding(TopAppBarDefaults.windowInsets)
-                    .layout { measurable, constraints ->
-                        val placeable = measurable.measure(constraints)
-                        val height =
-                            placeable.height * (1 - scrollBehavior.state.collapsedFraction)
-                        layout(placeable.width, height.roundToInt()) {
-                            placeable.place(0, 0)
-                        }
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(size = 50.dp),
-                    value = value,
-                    placeholder = { Text(text = "Search a group") },
-                    onValueChange = { value = it },
-                    leadingIcon = {
-                        IconButton(onClick = { isSearch = !isSearch }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    trailingIcon = {
-                        if (value.isNotBlank()) {
-                            IconButton(onClick = { value = "" }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            focusManager.clearFocus()
-                            keyboardController?.hide()
-                            isSearch = !isSearch
-                        }
-                    )
-                )
-            }
-        } else {
-            TopAppBar(
-                modifier = modifier,
-                title = {
-                    if (currentScreen != BrainCircleScreen.Start) {
-                        Text(stringResource(currentScreen.title))
-                    }
-                },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    .focusRequester(focusRequester),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent
                 ),
-                navigationIcon = {
-                    if (canNavigateUp) {
-                        IconButton(onClick = navigateUp) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.back_button)
-                            )
-                        }
+                shape = RoundedCornerShape(size = 50.dp),
+                value = value,
+                placeholder = { Text(text = "Search a group") },
+                onValueChange = { value = it },
+                leadingIcon = {
+                    IconButton(onClick = { isSearch = !isSearch }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
                     }
                 },
-                actions = {
-                    if (isInGroupsListScreen) {
-                        IconButton(onClick = { isSearch = !isSearch }) {
+                trailingIcon = {
+                    if (value.isNotBlank()) {
+                        IconButton(onClick = { value = "" }) {
                             Icon(
-                                imageVector = Icons.Filled.Search,
+                                imageVector = Icons.Filled.Close,
                                 contentDescription = null
                             )
                         }
                     }
                 },
-                scrollBehavior = scrollBehavior
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        isSearch = !isSearch
+                    }
+                )
             )
         }
+    } else {
+        CenterAlignedTopAppBar(
+            modifier = modifier,
+            title = {
+                Text(stringResource(currentScreen.title))
+            },
+            colors = TopAppBarDefaults.mediumTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            navigationIcon = {
+                if (canNavigateUp) {
+                    IconButton(onClick = navigateUp) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back_button)
+                        )
+                    }
+                }
+            },
+            actions = {
+                if (isInGroupsListScreen) {
+                    IconButton(onClick = { isSearch = !isSearch }) {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = null
+                        )
+                    }
+                }
+            },
+        )
     }
 }
 
 @Composable
 fun BrainCircleApp(
     navController: NavHostController = rememberNavController(),
+    authViewModel: AuthViewModel,
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentScreen = BrainCircleScreen.valueOf(
-        backStackEntry?.destination?.route ?: BrainCircleScreen.Start.name
+        backStackEntry?.destination?.route ?: BrainCircleScreen.SignIn.name
     )
 
     Scaffold(
@@ -201,33 +179,57 @@ fun BrainCircleApp(
                 currentScreen = currentScreen,
                 canNavigateUp = navController.previousBackStackEntry != null,
                 navigateUp = { navController.navigateUp() },
-                scrollBehavior = scrollBehavior,
                 isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
             )
         }
     ) {
         NavHost(
             navController = navController,
-            startDestination = BrainCircleScreen.Start.name
+            startDestination = BrainCircleScreen.SignIn.name
         ) {
-            composable(route = BrainCircleScreen.Start.name) {
-                StartScreen(
-                    onSignInButtonClick = { navController.navigate(BrainCircleScreen.SignIn.name) },
-                    onSignUpButtonClick = { navController.navigate(BrainCircleScreen.SignUp.name) }
-                )
-            }
             composable(route = BrainCircleScreen.SignIn.name) {
                 SignInScreen(
                     onSignInClick = {
                         navController.navigate(BrainCircleScreen.FindGroups.name) {
-                            popUpTo(BrainCircleScreen.Start.name) { inclusive = true }
+                            popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
+                    onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) }
+                )
+            }
+            composable(route = BrainCircleScreen.SignUp.name) {
+                SignUpScreen(
+                    onCreateAccountClick = {
+                        navController.navigate(BrainCircleScreen.FindGroups.name) {
+                            popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBackToSignInClick = {
+                        navController.navigate(BrainCircleScreen.SignIn.name) {
+                            popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
                             launchSingleTop = true
                         }
                     }
                 )
             }
-            composable(route = BrainCircleScreen.SignUp.name) {
-                SignUpScreen()
+            composable(route = BrainCircleScreen.ResetPassword.name) {
+                ResetPasswordScreen(
+                    onResetPasswordClick = {
+                        navController.navigate(BrainCircleScreen.SignIn.name) {
+                            popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBackToSignInClick = {
+                        navController.navigate(BrainCircleScreen.SignIn.name) {
+                            popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
             composable(route = BrainCircleScreen.FindGroups.name) {
                 FindGroupsScreen()
