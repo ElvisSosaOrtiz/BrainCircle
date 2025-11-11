@@ -203,7 +203,7 @@ fun BrainCircleApp(
     ) {
         NavHost(
             navController = navController,
-            startDestination = if (uiState.isUserSignedIn) BrainCircleScreen.FindGroups.name else BrainCircleScreen.SignIn.name
+            startDestination = if (!uiState.isUserSignedIn) BrainCircleScreen.SignIn.name else BrainCircleScreen.FindGroups.name
         ) {
             val navigateToFindGroups = {
                 navController.navigate(BrainCircleScreen.FindGroups.name) {

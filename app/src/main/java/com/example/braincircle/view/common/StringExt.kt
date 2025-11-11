@@ -4,7 +4,7 @@ import android.util.Patterns
 import java.util.regex.Pattern
 
 private const val MIN_PASS_LENGTH = 9
-private const val PASS_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{4,}$"
+private const val PASS_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])(?=\\S+$).{9,}$"
 
 fun String.isValidEmail(): Boolean =
     this.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(this).matches()

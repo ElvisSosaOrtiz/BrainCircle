@@ -14,15 +14,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -30,80 +35,128 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.braincircle.R
 import com.example.braincircle.view.common.EmailField
 import com.example.braincircle.view.common.PasswordField
+import com.example.braincircle.viewmodel.sign_up.SignUpViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpScreen(
-    modifier: Modifier = Modifier,
     onCreateAccountClick: () -> Unit,
-    onBackToSignInClick: () -> Unit
+    onBackToSignInClick: () -> Unit,
+    viewModel: SignUpViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier
 ) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var repeatPassword by rememberSaveable { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackBarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Image(
-            modifier = Modifier.size(150.dp),
-            painter = painterResource(R.drawable.brain_circle_app_icon),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        EmailField(
-            value = email,
-            nextIsPassword = true,
-            onValueChange = { email = it }
-        )
-        Spacer(Modifier.padding(vertical = 8.dp))
-        PasswordField(
-            value = password,
-            nextIsPasswordRepeat = true,
-            label = R.string.password,
-            onValueChange = { password = it }
-        )
-        Spacer(Modifier.padding(vertical = 8.dp))
-        PasswordField(
-            value = repeatPassword,
-            nextIsPasswordRepeat = false,
-            label = R.string.repeat_password,
-            onValueChange = { repeatPassword = it }
-        )
-        Spacer(Modifier.padding(vertical = 16.dp))
-        FilledTonalButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
-            elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-            onClick = onCreateAccountClick
+    Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) } ) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = stringResource(R.string.create_account),
-                color = MaterialTheme.colorScheme.onPrimary
+            Image(
+                modifier = Modifier.size(150.dp),
+                painter = painterResource(R.drawable.brain_circle_app_icon),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
             )
+            Spacer(modifier = Modifier.height(32.dp))
+            EmailField(
+                value = uiState.email,
+                nextIsPassword = true,
+                enabled = !uiState.isLoading,
+                onValueChange = { viewModel.onEmailChange(it) }
+            )
+            if (uiState.emailValidationMessage.isNotEmpty()) {
+                Text(
+                    text = uiState.emailValidationMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(Modifier.padding(vertical = 8.dp))
+            PasswordField(
+                value = uiState.password,
+                nextIsPasswordRepeat = true,
+                enabled = !uiState.isLoading,
+                label = R.string.password,
+                onValueChange = { viewModel.onPasswordChange(it) }
+            )
+            if (uiState.passwordValidationMessage.isNotEmpty()) {
+                Text(
+                    modifier = Modifier.padding(horizontal = 48.dp),
+                    text = uiState.passwordValidationMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(Modifier.padding(vertical = 8.dp))
+            PasswordField(
+                value = uiState.repeatPassword,
+                nextIsPasswordRepeat = false,
+                enabled = !uiState.isLoading,
+                label = R.string.repeat_password,
+                onValueChange = { viewModel.onRepeatPasswordChange(it) }
+            )
+            if (uiState.repeatPasswordValidationMessage.isNotEmpty()) {
+                Text(
+                    text = uiState.repeatPasswordValidationMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(Modifier.padding(vertical = 16.dp))
+            FilledTonalButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
+                elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
+                onClick = { viewModel.onSignUpClick(onCreateAccountClick) }
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Text(
+                        text = stringResource(R.string.create_account),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+            OutlinedButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimaryContainer),
+                onClick = onBackToSignInClick
+            ) {
+                Text(
+                    text = stringResource(R.string.i_have_an_account),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
-        OutlinedButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = onBackToSignInClick
-        ) {
-            Text(
-                text = stringResource(R.string.i_have_an_account),
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+        LaunchedEffect(uiState.errorMessage) {
+            if (uiState.errorMessage.isNotEmpty()) {
+                scope.launch {
+                    snackBarHostState.showSnackbar(
+                        message = uiState.errorMessage,
+                        actionLabel = "Dismiss",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                viewModel.clearMessages()
+            }
         }
     }
 }

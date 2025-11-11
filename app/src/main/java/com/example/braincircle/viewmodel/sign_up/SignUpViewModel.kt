@@ -1,13 +1,13 @@
-package com.example.braincircle.viewmodel.sign_in
+package com.example.braincircle.viewmodel.sign_up
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.AuthResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.view.common.isValidEmail
+import com.example.braincircle.view.common.isValidPassword
+import com.example.braincircle.view.common.passwordMatches
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,16 +17,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignInViewModel @Inject constructor(
+class SignUpViewModel @Inject constructor(
     private val auth: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SignInUiState())
-    val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SignUpUiState())
+    val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
 
     private val email
         get() = uiState.value.email
-
     private val password
         get() = uiState.value.password
 
@@ -42,7 +41,13 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun onSignInWithEmailClick(navigateToFindGroups: () -> Unit) {
+    fun onRepeatPasswordChange(newValue: String) {
+        _uiState.update { currentState ->
+            currentState.copy(repeatPassword = newValue)
+        }
+    }
+
+    fun onSignUpClick(navigateToFindGroups: () -> Unit) {
         clearMessages(isLoading = true)
 
         if (!email.isValidEmail()) {
@@ -55,10 +60,20 @@ class SignInViewModel @Inject constructor(
             return
         }
 
-        if (password.isBlank()) {
+        if (!password.isValidPassword()) {
             _uiState.update { currentState ->
                 currentState.copy(
-                    passwordValidationMessage = "Password cannot be blank",
+                    passwordValidationMessage = "Your password should be at least 9 characters long and contain one uppercase letter, one lowercase letter, one digit and a special character, with no whitespaces",
+                    isLoading = false
+                )
+            }
+            return
+        }
+
+        if (!password.passwordMatches(_uiState.value.repeatPassword)) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    repeatPasswordValidationMessage = "Passwords do not match",
                     isLoading = false
                 )
             }
@@ -66,45 +81,11 @@ class SignInViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            auth.signInWithEmail(email, password)
+            auth.signUpWithEmail(email, password)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
-                            errorMessage = e.localizedMessage ?: "Sign in failed",
-                            isLoading = false
-                        )
-                    }
-                }
-                .collect { response ->
-                    when (response) {
-                        is AuthResponse.Success -> {
-                            navigateToFindGroups()
-                        }
-                        is AuthResponse.Error -> {
-                            _uiState.update { currentState ->
-                                currentState.copy(
-                                    errorMessage = response.message,
-                                    isLoading = false
-                                )
-                            }
-                        }
-                    }
-                }
-        }
-    }
-
-    fun onSignInWithGoogleClick(
-        @ApplicationContext context: Context,
-        navigateToFindGroups: () -> Unit
-    ) {
-        clearMessages(isLoading = true)
-
-        viewModelScope.launch {
-            auth.signInWithGoogle(context)
-                .catch { e ->
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            errorMessage = e.localizedMessage ?: "Sign in failed",
+                            errorMessage = e.localizedMessage ?: "Account creation failed",
                             isLoading = false
                         )
                     }
@@ -132,6 +113,7 @@ class SignInViewModel @Inject constructor(
             currentState.copy(
                 emailValidationMessage = "",
                 passwordValidationMessage = "",
+                repeatPasswordValidationMessage = "",
                 errorMessage = "",
                 isLoading = isLoading
             )
