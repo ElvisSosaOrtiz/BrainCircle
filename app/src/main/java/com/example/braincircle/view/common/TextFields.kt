@@ -32,6 +32,7 @@ fun EmailField(
     value: String,
     nextIsPassword: Boolean,
     onValueChange: (String) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
@@ -40,6 +41,7 @@ fun EmailField(
             .padding(horizontal = 48.dp),
         shape = RoundedCornerShape(50.dp),
         singleLine = true,
+        enabled = enabled,
         value = value,
         onValueChange = { onValueChange(it) },
         label = { Text(stringResource(R.string.email)) },
@@ -57,6 +59,7 @@ fun PasswordField(
     nextIsPasswordRepeat: Boolean,
     @StringRes label: Int,
     onValueChange: (String) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var isVisible by rememberSaveable { mutableStateOf(false) }
@@ -73,6 +76,7 @@ fun PasswordField(
             .fillMaxWidth()
             .padding(horizontal = 48.dp),
         shape = RoundedCornerShape(50.dp),
+        enabled = enabled,
         value = value,
         onValueChange = { onValueChange(it) },
         label = { Text(text = stringResource(label)) },

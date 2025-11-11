@@ -41,13 +41,15 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.braincircle.R
-import com.example.braincircle.viewmodel.auth_screens.AuthViewModel
+import com.example.braincircle.viewmodel.brain_circle.BrainCircleViewModel
 
 enum class BrainCircleScreen(@param:StringRes val title: Int) {
     SignIn(title = R.string.sign_in_title),
@@ -162,8 +164,8 @@ fun BrainCircleAppBar(
 
 @Composable
 fun BrainCircleApp(
+    viewModel: BrainCircleViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel,
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -171,6 +173,22 @@ fun BrainCircleApp(
     val currentScreen = BrainCircleScreen.valueOf(
         backStackEntry?.destination?.route ?: BrainCircleScreen.SignIn.name
     )
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.isUserSignedIn) {
+        if (uiState.isUserSignedIn) {
+            navController.navigate(BrainCircleScreen.FindGroups.name) {
+                popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+                launchSingleTop = true
+            }
+        } else {
+            navController.navigate(BrainCircleScreen.SignIn.name) {
+                popUpTo(BrainCircleScreen.FindGroups.name) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -185,28 +203,25 @@ fun BrainCircleApp(
     ) {
         NavHost(
             navController = navController,
-            startDestination = BrainCircleScreen.SignIn.name
+            startDestination = if (uiState.isUserSignedIn) BrainCircleScreen.FindGroups.name else BrainCircleScreen.SignIn.name
         ) {
+            val navigateToFindGroups = {
+                navController.navigate(BrainCircleScreen.FindGroups.name) {
+                    popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
             composable(route = BrainCircleScreen.SignIn.name) {
                 SignInScreen(
-                    onSignInClick = {
-                        navController.navigate(BrainCircleScreen.FindGroups.name) {
-                            popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    },
+                    onSignInClick = navigateToFindGroups,
+                    onSignInWithGoogleClick = navigateToFindGroups,
                     onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
                     onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) }
                 )
             }
             composable(route = BrainCircleScreen.SignUp.name) {
                 SignUpScreen(
-                    onCreateAccountClick = {
-                        navController.navigate(BrainCircleScreen.FindGroups.name) {
-                            popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    },
+                    onCreateAccountClick = navigateToFindGroups,
                     onBackToSignInClick = {
                         navController.navigate(BrainCircleScreen.SignIn.name) {
                             popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
