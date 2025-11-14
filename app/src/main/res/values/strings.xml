@@ -16,7 +16,7 @@
     <string name="find_groups_title">Find groups</string>
     <string name="default_web_client_id">779077593097-k58dk443aj5iptsjbhk5jm8q1mtpn126.apps.googleusercontent.com</string>
     <string name="create_account">Create account</string>
-    <string name="reset_password">Reset password</string>
+    <string name="send_pwd_reset_email">Send password reset email</string>
     <string name="back_to_sign_in">Back to sign in</string>
     <string name="i_have_an_account">I have an account</string>
     <string name="forgot_password">"Forgot password? "</string>
@@ -24,4 +24,5 @@
     <string name="or_connect_with">Or connect with</string>
     <string name="google">Google</string>
     <string name="reset_password_title">Reset your password</string>
+    <string name="navigation_drawer">Navigation drawer</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.braincircle.view
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -46,14 +47,15 @@ import com.example.braincircle.view.common.PasswordField
 import com.example.braincircle.viewmodel.sign_in.SignInViewModel
 import kotlinx.coroutines.launch
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SignInScreen(
+    modifier: Modifier = Modifier,
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
     onSignInWithGoogleClick: () -> Unit,
     onResetPasswordClick: () -> Unit,
-    viewModel: SignInViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: SignInViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -130,7 +132,7 @@ fun SignInScreen(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
-                onClick = { viewModel.onSignInWithEmailClick(onSignInClick) }
+                onClick = { viewModel.signInWithEmailAndPassword(onSignInClick) }
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator()
@@ -168,7 +170,7 @@ fun SignInScreen(
                 colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                 elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
                 enabled = !uiState.isLoading,
-                onClick = { viewModel.onSignInWithGoogleClick(context, onSignInWithGoogleClick) }
+                onClick = { viewModel.signInWithGoogle(context, onSignInWithGoogleClick) }
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(

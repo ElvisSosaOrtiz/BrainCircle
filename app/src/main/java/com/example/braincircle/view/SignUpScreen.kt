@@ -1,5 +1,6 @@
 package com.example.braincircle.view
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,12 +44,13 @@ import com.example.braincircle.view.common.PasswordField
 import com.example.braincircle.viewmodel.sign_up.SignUpViewModel
 import kotlinx.coroutines.launch
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SignUpScreen(
+    modifier: Modifier = Modifier,
     onCreateAccountClick: () -> Unit,
     onBackToSignInClick: () -> Unit,
-    viewModel: SignUpViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -122,7 +124,7 @@ fun SignUpScreen(
                     .padding(horizontal = 48.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                 elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-                onClick = { viewModel.onSignUpClick(onCreateAccountClick) }
+                onClick = { viewModel.signUp(onCreateAccountClick) }
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator()

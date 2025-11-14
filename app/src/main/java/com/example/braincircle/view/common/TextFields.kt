@@ -29,11 +29,11 @@ import com.example.braincircle.R
 
 @Composable
 fun EmailField(
+    modifier: Modifier = Modifier,
     value: String,
     nextIsPassword: Boolean,
     onValueChange: (String) -> Unit,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         modifier = modifier
@@ -55,12 +55,12 @@ fun EmailField(
 
 @Composable
 fun PasswordField(
+    modifier: Modifier = Modifier,
     value: String,
     nextIsPasswordRepeat: Boolean,
     @StringRes label: Int,
     onValueChange: (String) -> Unit,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    enabled: Boolean = true
 ) {
     var isVisible by rememberSaveable { mutableStateOf(false) }
 

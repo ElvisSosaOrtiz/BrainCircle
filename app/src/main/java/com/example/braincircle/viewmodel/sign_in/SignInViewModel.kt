@@ -42,7 +42,7 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun onSignInWithEmailClick(navigateToFindGroups: () -> Unit) {
+    fun signInWithEmailAndPassword(navigateToFindGroups: () -> Unit) {
         clearMessages(isLoading = true)
 
         if (!email.isValidEmail()) {
@@ -93,7 +93,7 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun onSignInWithGoogleClick(
+    fun signInWithGoogle(
         @ApplicationContext context: Context,
         navigateToFindGroups: () -> Unit
     ) {

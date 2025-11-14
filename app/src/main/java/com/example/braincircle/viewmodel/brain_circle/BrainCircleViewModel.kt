@@ -22,4 +22,11 @@ class BrainCircleViewModel @Inject constructor(
             currentState.copy(isUserSignedIn = auth.isUserSignedIn())
         }
     }
+
+    fun signOut() {
+        auth.signOut()
+        _uiState.update { currentState ->
+            currentState.copy(isUserSignedIn = false)
+        }
+    }
 }

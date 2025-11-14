@@ -36,7 +36,7 @@ class AuthRepositoryImpl @Inject constructor(
                 } else {
                     trySend(
                         AuthResponse.Error(
-                            message = task.exception?.message ?: "Unknown error while signing in"
+                            message = task.exception?.localizedMessage ?: "Unknown error while signing in"
                         )
                     )
                 }
@@ -55,7 +55,7 @@ class AuthRepositoryImpl @Inject constructor(
                 } else {
                     trySend(
                         AuthResponse.Error(
-                            message = task.exception?.message
+                            message = task.exception?.localizedMessage
                                 ?: "Unknown error while creating account"
                         )
                     )
@@ -104,7 +104,7 @@ class AuthRepositoryImpl @Inject constructor(
                                     } else {
                                         trySend(
                                             AuthResponse.Error(
-                                                message = task.exception?.message
+                                                message = task.exception?.localizedMessage
                                                     ?: "Unknown error while signing in with Google"
                                             )
                                         )
@@ -139,7 +139,7 @@ class AuthRepositoryImpl @Inject constructor(
                 } else {
                     trySend(
                         AuthResponse.Error(
-                            message = task.exception?.message
+                            message = task.exception?.localizedMessage
                                 ?: "Unknown error while sending password reset"
                         )
                     )

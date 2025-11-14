@@ -2,33 +2,49 @@
 
 package com.example.braincircle.view
 
+import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +66,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.braincircle.R
 import com.example.braincircle.viewmodel.brain_circle.BrainCircleViewModel
+import kotlinx.coroutines.launch
 
 enum class BrainCircleScreen(@param:StringRes val title: Int) {
     SignIn(title = R.string.sign_in_title),
@@ -60,11 +77,12 @@ enum class BrainCircleScreen(@param:StringRes val title: Int) {
 
 @Composable
 fun BrainCircleAppBar(
+    modifier: Modifier = Modifier,
     currentScreen: BrainCircleScreen,
     canNavigateUp: Boolean,
     navigateUp: () -> Unit,
-    isInGroupsListScreen: Boolean,
-    modifier: Modifier = Modifier
+    onNavDrawerClick: () -> Unit,
+    isInGroupsListScreen: Boolean
 ) {
     var isSearch by remember { mutableStateOf(false) }
     var value by remember { mutableStateOf("") }
@@ -147,6 +165,14 @@ fun BrainCircleAppBar(
                         )
                     }
                 }
+                if (isInGroupsListScreen) {
+                    IconButton(onClick = onNavDrawerClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = stringResource(R.string.navigation_drawer)
+                        )
+                    }
+                }
             },
             actions = {
                 if (isInGroupsListScreen) {
@@ -163,13 +189,49 @@ fun BrainCircleAppBar(
 }
 
 @Composable
+fun NavigationDrawerContent(
+    modifier: Modifier = Modifier,
+    onSignOutClick: () -> Unit,
+    viewModel: BrainCircleViewModel
+) {
+    ModalDrawerSheet(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text(text = "Elvis Sosa")
+                FilledIconButton(onClick = {
+                    viewModel.signOut()
+                    onSignOutClick()
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = null
+                    )
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
 fun BrainCircleApp(
+    modifier: Modifier = Modifier,
     viewModel: BrainCircleViewModel = hiltViewModel(),
-    navController: NavHostController = rememberNavController(),
-    modifier: Modifier = Modifier
+    navController: NavHostController = rememberNavController()
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     val currentScreen = BrainCircleScreen.valueOf(
         backStackEntry?.destination?.route ?: BrainCircleScreen.SignIn.name
     )
@@ -190,64 +252,79 @@ fun BrainCircleApp(
         }
     }
 
-    Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            BrainCircleAppBar(
-                currentScreen = currentScreen,
-                canNavigateUp = navController.previousBackStackEntry != null,
-                navigateUp = { navController.navigateUp() },
-                isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            NavigationDrawerContent(
+                viewModel = viewModel,
+                onSignOutClick = {
+                    navController.navigate(BrainCircleScreen.SignIn.name) {
+                        popUpTo(BrainCircleScreen.FindGroups.name) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                    scope.launch { drawerState.close() }
+                }
             )
         }
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = if (!uiState.isUserSignedIn) BrainCircleScreen.SignIn.name else BrainCircleScreen.FindGroups.name
-        ) {
-            val navigateToFindGroups = {
-                navController.navigate(BrainCircleScreen.FindGroups.name) {
-                    popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-            composable(route = BrainCircleScreen.SignIn.name) {
-                SignInScreen(
-                    onSignInClick = navigateToFindGroups,
-                    onSignInWithGoogleClick = navigateToFindGroups,
-                    onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
-                    onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) }
-                )
-            }
-            composable(route = BrainCircleScreen.SignUp.name) {
-                SignUpScreen(
-                    onCreateAccountClick = navigateToFindGroups,
-                    onBackToSignInClick = {
-                        navController.navigate(BrainCircleScreen.SignIn.name) {
-                            popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-            composable(route = BrainCircleScreen.ResetPassword.name) {
-                ResetPasswordScreen(
-                    onResetPasswordClick = {
-                        navController.navigate(BrainCircleScreen.SignIn.name) {
-                            popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
-                            launchSingleTop = true
+        Scaffold(
+            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                BrainCircleAppBar(
+                    currentScreen = currentScreen,
+                    canNavigateUp = navController.previousBackStackEntry != null,
+                    navigateUp = { navController.navigateUp() },
+                    onNavDrawerClick = {
+                        scope.launch {
+                            drawerState.apply { if (isClosed) open() else close() }
                         }
                     },
-                    onBackToSignInClick = {
-                        navController.navigate(BrainCircleScreen.SignIn.name) {
-                            popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
+                    isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
                 )
             }
-            composable(route = BrainCircleScreen.FindGroups.name) {
-                FindGroupsScreen()
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = if (!uiState.isUserSignedIn) BrainCircleScreen.SignIn.name else BrainCircleScreen.FindGroups.name
+            ) {
+                val navigateToFindGroups = {
+                    navController.navigate(BrainCircleScreen.FindGroups.name) {
+                        popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+                composable(route = BrainCircleScreen.SignIn.name) {
+                    SignInScreen(
+                        onSignInClick = navigateToFindGroups,
+                        onSignInWithGoogleClick = navigateToFindGroups,
+                        onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
+                        onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) }
+                    )
+                }
+                composable(route = BrainCircleScreen.SignUp.name) {
+                    SignUpScreen(
+                        onCreateAccountClick = navigateToFindGroups,
+                        onBackToSignInClick = {
+                            navController.navigate(BrainCircleScreen.SignIn.name) {
+                                popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(route = BrainCircleScreen.ResetPassword.name) {
+                    ResetPasswordScreen(
+                        onBackToSignInClick = {
+                            navController.navigate(BrainCircleScreen.SignIn.name) {
+                                popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(route = BrainCircleScreen.FindGroups.name) {
+                    FindGroupsScreen()
+                }
             }
         }
     }

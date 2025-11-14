@@ -1,12 +1,10 @@
-package com.example.braincircle.viewmodel.sign_up
+package com.example.braincircle.viewmodel.reset_password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.AuthResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.view.common.isValidEmail
-import com.example.braincircle.view.common.isValidPassword
-import com.example.braincircle.view.common.passwordMatches
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,17 +15,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor(
+class ResetPasswordViewModel @Inject constructor(
     private val auth: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SignUpUiState())
-    val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ResetPasswordUiState())
+    val uiState: StateFlow<ResetPasswordUiState> = _uiState.asStateFlow()
 
     private val email
         get() = uiState.value.email
-    private val password
-        get() = uiState.value.password
 
     fun onEmailChange(newValue: String) {
         _uiState.update { currentState ->
@@ -35,20 +31,8 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
-    fun onPasswordChange(newValue: String) {
-        _uiState.update { currentState ->
-            currentState.copy(password = newValue)
-        }
-    }
-
-    fun onRepeatPasswordChange(newValue: String) {
-        _uiState.update { currentState ->
-            currentState.copy(repeatPassword = newValue)
-        }
-    }
-
-    fun signUp(navigateToFindGroups: () -> Unit) {
-        clearMessages(isLoading = true)
+    fun resetPassword() {
+        clearMessages(true)
 
         if (!email.isValidEmail()) {
             _uiState.update { currentState ->
@@ -60,32 +44,12 @@ class SignUpViewModel @Inject constructor(
             return
         }
 
-        if (!password.isValidPassword()) {
-            _uiState.update { currentState ->
-                currentState.copy(
-                    passwordValidationMessage = "Your password should be at least 9 characters long and contain one uppercase letter, one lowercase letter, one digit and a special character, with no whitespaces",
-                    isLoading = false
-                )
-            }
-            return
-        }
-
-        if (!password.passwordMatches(_uiState.value.repeatPassword)) {
-            _uiState.update { currentState ->
-                currentState.copy(
-                    repeatPasswordValidationMessage = "Passwords do not match",
-                    isLoading = false
-                )
-            }
-            return
-        }
-
         viewModelScope.launch {
-            auth.signUpWithEmail(email, password)
+            auth.sendPasswordReset(email)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
-                            errorMessage = e.localizedMessage ?: "Account creation failed",
+                            errorMessage = e.localizedMessage ?: "Password reset failed",
                             isLoading = false
                         )
                     }
@@ -93,7 +57,12 @@ class SignUpViewModel @Inject constructor(
                 .collect { response ->
                     when (response) {
                         is AuthResponse.Success -> {
-                            navigateToFindGroups()
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    confirmationMessage = "Password reset request sent. Check your email.",
+                                    isLoading = false
+                                )
+                            }
                         }
                         is AuthResponse.Error -> {
                             _uiState.update { currentState ->
@@ -112,8 +81,6 @@ class SignUpViewModel @Inject constructor(
         _uiState.update { currentState ->
             currentState.copy(
                 emailValidationMessage = "",
-                passwordValidationMessage = "",
-                repeatPasswordValidationMessage = "",
                 errorMessage = "",
                 isLoading = isLoading
             )
