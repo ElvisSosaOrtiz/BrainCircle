@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "779077593097-kgmp98ns36vki5tf48ksiq7m2gqb0571.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.braincircle",
+            "certificate_hash": "48264364a315838e3d1141a35b8a23fd819db541"
+          }
+        },
+        {
           "client_id": "779077593097-k58dk443aj5iptsjbhk5jm8q1mtpn126.apps.googleusercontent.com",
           "client_type": 3
         }

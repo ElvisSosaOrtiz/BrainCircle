@@ -28,10 +28,20 @@ class SignUpViewModel @Inject constructor(
         get() = uiState.value.email
     private val password
         get() = uiState.value.password
+    private val username
+        get() = uiState.value.username
+    private val photo
+        get() = uiState.value.photo
 
     fun onEmailChange(newValue: String) {
         _uiState.update { currentState ->
             currentState.copy(email = newValue)
+        }
+    }
+
+    fun onUsernameChange(newValue: String) {
+        _uiState.update { currentState ->
+            currentState.copy(username = newValue)
         }
     }
 
@@ -53,7 +63,17 @@ class SignUpViewModel @Inject constructor(
         if (!email.isValidEmail()) {
             _uiState.update { currentState ->
                 currentState.copy(
-                    emailValidationMessage = "Invalid email",
+                    emailValidationMessage = "Invalid email or empty",
+                    isLoading = false
+                )
+            }
+            return
+        }
+
+        if (username.isEmpty()) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    usernameValidationMessage = "Username cannot be empty",
                     isLoading = false
                 )
             }
@@ -81,7 +101,7 @@ class SignUpViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            auth.signUpWithEmail(email, password)
+            auth.signUpWithEmail(email, password, username, photo)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -112,6 +132,7 @@ class SignUpViewModel @Inject constructor(
         _uiState.update { currentState ->
             currentState.copy(
                 emailValidationMessage = "",
+                usernameValidationMessage = "",
                 passwordValidationMessage = "",
                 repeatPasswordValidationMessage = "",
                 errorMessage = "",

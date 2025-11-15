@@ -1,6 +1,7 @@
 package com.example.braincircle.model.implementation
 
 import android.content.Context
+import android.net.Uri
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -13,6 +14,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -46,12 +48,30 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signUpWithEmail(
         email: String,
-        password: String
+        password: String,
+        username: String,
+        photoUri: Uri?
     ): Flow<AuthResponse> = callbackFlow {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    trySend(AuthResponse.Success)
+                    val profileUpdate = UserProfileChangeRequest.Builder()
+                        .setDisplayName(username)
+                        .setPhotoUri(photoUri)
+                        .build()
+                    auth.currentUser?.updateProfile(profileUpdate)
+                        ?.addOnCompleteListener { updateUserTask ->
+                            if (updateUserTask.isSuccessful) {
+                                trySend(AuthResponse.Success)
+                            } else {
+                                trySend(
+                                    AuthResponse.Error(
+                                        message = updateUserTask.exception?.localizedMessage
+                                            ?: "Unknown error while updating user profile"
+                                    )
+                                )
+                            }
+                        }
                 } else {
                     trySend(
                         AuthResponse.Error(

@@ -37,7 +37,7 @@ class ResetPasswordViewModel @Inject constructor(
         if (!email.isValidEmail()) {
             _uiState.update { currentState ->
                 currentState.copy(
-                    emailValidationMessage = "Invalid email",
+                    emailValidationMessage = "Invalid email or empty",
                     isLoading = false
                 )
             }

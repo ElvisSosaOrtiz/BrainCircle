@@ -17,6 +17,9 @@ class BrainCircleViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BrainCircleUiState())
     val uiState: StateFlow<BrainCircleUiState> = _uiState.asStateFlow()
 
+    val username: String
+        get() = auth.currentUser()?.displayName ?: ""
+
     init {
         _uiState.update { currentState ->
             currentState.copy(isUserSignedIn = auth.isUserSignedIn())

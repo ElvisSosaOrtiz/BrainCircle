@@ -191,6 +191,7 @@ fun BrainCircleAppBar(
 @Composable
 fun NavigationDrawerContent(
     modifier: Modifier = Modifier,
+    username: String,
     onSignOutClick: () -> Unit,
     viewModel: BrainCircleViewModel
 ) {
@@ -206,7 +207,7 @@ fun NavigationDrawerContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(text = "Elvis Sosa")
+                Text(text = username)
                 FilledIconButton(onClick = {
                     viewModel.signOut()
                     onSignOutClick()
@@ -238,25 +239,12 @@ fun BrainCircleApp(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isUserSignedIn) {
-        if (uiState.isUserSignedIn) {
-            navController.navigate(BrainCircleScreen.FindGroups.name) {
-                popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
-                launchSingleTop = true
-            }
-        } else {
-            navController.navigate(BrainCircleScreen.SignIn.name) {
-                popUpTo(BrainCircleScreen.FindGroups.name) { inclusive = true }
-                launchSingleTop = true
-            }
-        }
-    }
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             NavigationDrawerContent(
                 viewModel = viewModel,
+                username = viewModel.username,
                 onSignOutClick = {
                     navController.navigate(BrainCircleScreen.SignIn.name) {
                         popUpTo(BrainCircleScreen.FindGroups.name) { inclusive = true }
