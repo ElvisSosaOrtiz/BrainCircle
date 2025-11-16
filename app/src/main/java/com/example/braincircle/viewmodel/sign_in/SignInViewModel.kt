@@ -91,6 +91,7 @@ class SignInViewModel @Inject constructor(
                     }
                 }
         }
+        clearFields()
     }
 
     fun signInWithGoogle(
@@ -134,6 +135,15 @@ class SignInViewModel @Inject constructor(
                 passwordValidationMessage = "",
                 errorMessage = "",
                 isLoading = isLoading
+            )
+        }
+    }
+
+    fun clearFields() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                email = "",
+                password = ""
             )
         }
     }

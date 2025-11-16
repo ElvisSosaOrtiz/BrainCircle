@@ -168,6 +168,16 @@ class AuthRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
+    override suspend fun getAuthStateFlow(): Flow<FirebaseUser?> = callbackFlow {
+        val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+            trySend(auth.currentUser).isSuccess
+        }
+        auth.addAuthStateListener(authStateListener)
+        awaitClose {
+            auth.removeAuthStateListener(authStateListener)
+        }
+    }
+
     override fun isUserSignedIn(): Boolean {
         val instance = FirebaseAuth.getInstance()
         instance.apply {

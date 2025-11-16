@@ -26,4 +26,8 @@
     <string name="reset_password_title">Reset your password</string>
     <string name="navigation_drawer">Navigation drawer</string>
     <string name="username">Username</string>
+    <string name="sign_out">Sign out</string>
+    <string name="user_profile_picture">User profile picture</string>
+    <string name="sign_out_confirmation_question">Are you sure you want to sign out?</string>
+    <string name="cancel">Cancel</string>
 </resources>

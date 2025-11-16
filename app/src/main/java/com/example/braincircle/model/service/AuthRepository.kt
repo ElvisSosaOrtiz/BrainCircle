@@ -15,4 +15,5 @@ interface AuthRepository {
     fun signOut()
     fun currentUser(): FirebaseUser?
     fun isUserSignedIn(): Boolean
+    suspend fun getAuthStateFlow(): Flow<FirebaseUser?>
 }

@@ -75,6 +75,7 @@ class ResetPasswordViewModel @Inject constructor(
                     }
                 }
         }
+        clearFields()
     }
 
     fun clearMessages(isLoading: Boolean = false) {
@@ -84,6 +85,12 @@ class ResetPasswordViewModel @Inject constructor(
                 errorMessage = "",
                 isLoading = isLoading
             )
+        }
+    }
+
+    fun clearFields() {
+        _uiState.update { currentState ->
+            currentState.copy(email = "")
         }
     }
 }

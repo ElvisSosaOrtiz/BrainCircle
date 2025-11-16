@@ -3,36 +3,45 @@
 package com.example.braincircle.view
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -48,14 +57,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,7 +77,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.braincircle.R
+import com.example.braincircle.ui.theme.BrainCircleTheme
+import com.example.braincircle.viewmodel.brain_circle.BrainCircleUiState
 import com.example.braincircle.viewmodel.brain_circle.BrainCircleViewModel
 import kotlinx.coroutines.launch
 
@@ -81,8 +98,8 @@ fun BrainCircleAppBar(
     currentScreen: BrainCircleScreen,
     canNavigateUp: Boolean,
     navigateUp: () -> Unit,
-    onNavDrawerClick: () -> Unit,
-    isInGroupsListScreen: Boolean
+    onNavDrawerClick: () -> Unit = {},
+    isInGroupsListScreen: Boolean = false
 ) {
     var isSearch by remember { mutableStateOf(false) }
     var value by remember { mutableStateOf("") }
@@ -191,10 +208,14 @@ fun BrainCircleAppBar(
 @Composable
 fun NavigationDrawerContent(
     modifier: Modifier = Modifier,
-    username: String,
-    onSignOutClick: () -> Unit,
-    viewModel: BrainCircleViewModel
+    uiState: BrainCircleUiState,
+    onSignOutNavDrawerItemClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
+    val username = uiState.username ?: ""
+    val photoUrl = uiState.photoUrl ?: ""
+    var showSignOutDialog by remember { mutableStateOf(false) }
+
     ModalDrawerSheet(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -204,21 +225,93 @@ fun NavigationDrawerContent(
             Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = username)
-                FilledIconButton(onClick = {
-                    viewModel.signOut()
-                    onSignOutClick()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = null
+                if (photoUrl.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val usernameSplit = username.split(" ")
+                        val initials = if (usernameSplit.size > 1) {
+                            usernameSplit
+                                .mapNotNull { it.firstOrNull()?.toString() }
+                                .reduce { acc, s -> acc + s }
+                        } else {
+                            "${username.getOrNull(0)}${username.getOrNull(1)}"
+                        }
+
+                        Text(
+                            text = initials,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(photoUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = stringResource(R.string.user_profile_picture),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
                     )
                 }
+                Spacer(Modifier.padding(horizontal = 4.dp))
+                Text(text = username)
             }
+            Spacer(Modifier.padding(top = 12.dp))
+            HorizontalDivider()
+            NavigationDrawerItem(
+                label = { Text(text = stringResource(R.string.sign_out)) },
+                selected = false,
+                icon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Default.Logout,
+                        contentDescription = stringResource(R.string.sign_out)
+                    )
+                },
+                onClick = {
+                    onSignOutNavDrawerItemClick()
+                    showSignOutDialog = true
+                }
+            )
         }
+    }
+
+    if (showSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            confirmButton = {
+                FilledTonalButton(
+                    onClick = {
+                        onSignOutClick()
+                        showSignOutDialog = false
+                    },
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+
+                ) { Text(text = stringResource(R.string.sign_out)) }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showSignOutDialog = false },
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) { Text(text = stringResource(R.string.cancel)) }
+            },
+            title = { Text(text = stringResource(R.string.sign_out)) },
+            text = { Text(text = stringResource(R.string.sign_out_confirmation_question)) },
+        )
     }
 }
 
@@ -239,81 +332,134 @@ fun BrainCircleApp(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            NavigationDrawerContent(
-                viewModel = viewModel,
-                username = viewModel.username,
-                onSignOutClick = {
-                    navController.navigate(BrainCircleScreen.SignIn.name) {
-                        popUpTo(BrainCircleScreen.FindGroups.name) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                    scope.launch { drawerState.close() }
+    NavHost(
+        navController = navController,
+        startDestination = if (uiState.isUserSignedIn) BrainCircleScreen.FindGroups.name else BrainCircleScreen.SignIn.name
+    ) {
+        val navigateToFindGroups = {
+            navController.navigate(BrainCircleScreen.FindGroups.name) {
+                popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+        composable(route = BrainCircleScreen.SignIn.name) {
+            SignInScreen(
+                onSignInClick = navigateToFindGroups,
+                onSignInWithGoogleClick = navigateToFindGroups,
+                onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
+                onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) },
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                        onNavDrawerClick = {
+                            scope.launch {
+                                drawerState.apply { if (isClosed) open() else close() }
+                            }
+                        }
+                    )
                 }
             )
         }
-    ) {
-        Scaffold(
-            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                BrainCircleAppBar(
-                    currentScreen = currentScreen,
-                    canNavigateUp = navController.previousBackStackEntry != null,
-                    navigateUp = { navController.navigateUp() },
-                    onNavDrawerClick = {
-                        scope.launch {
-                            drawerState.apply { if (isClosed) open() else close() }
-                        }
-                    },
-                    isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
-                )
-            }
-        ) {
-            NavHost(
-                navController = navController,
-                startDestination = if (!uiState.isUserSignedIn) BrainCircleScreen.SignIn.name else BrainCircleScreen.FindGroups.name
-            ) {
-                val navigateToFindGroups = {
-                    navController.navigate(BrainCircleScreen.FindGroups.name) {
-                        popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
+        composable(route = BrainCircleScreen.SignUp.name) {
+            SignUpScreen(
+                onCreateAccountClick = navigateToFindGroups,
+                onBackToSignInClick = {
+                    navController.navigate(BrainCircleScreen.SignIn.name) {
+                        popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
                         launchSingleTop = true
                     }
-                }
-                composable(route = BrainCircleScreen.SignIn.name) {
-                    SignInScreen(
-                        onSignInClick = navigateToFindGroups,
-                        onSignInWithGoogleClick = navigateToFindGroups,
-                        onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
-                        onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) }
+                },
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                        onNavDrawerClick = {
+                            scope.launch {
+                                drawerState.apply { if (isClosed) open() else close() }
+                            }
+                        }
                     )
                 }
-                composable(route = BrainCircleScreen.SignUp.name) {
-                    SignUpScreen(
-                        onCreateAccountClick = navigateToFindGroups,
-                        onBackToSignInClick = {
+            )
+        }
+        composable(route = BrainCircleScreen.ResetPassword.name) {
+            ResetPasswordScreen(
+                onBackToSignInClick = {
+                    navController.navigate(BrainCircleScreen.SignIn.name) {
+                        popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                        onNavDrawerClick = {
+                            scope.launch {
+                                drawerState.apply { if (isClosed) open() else close() }
+                            }
+                        }
+                    )
+                }
+            )
+        }
+        composable(route = BrainCircleScreen.FindGroups.name) {
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    NavigationDrawerContent(
+                        uiState = uiState,
+                        onSignOutNavDrawerItemClick = { scope.launch { drawerState.close() } },
+                        onSignOutClick = {
+                            viewModel.signOut()
                             navController.navigate(BrainCircleScreen.SignIn.name) {
-                                popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
+                                popUpTo(BrainCircleScreen.FindGroups.name) {
+                                    inclusive = true
+                                }
                                 launchSingleTop = true
                             }
                         }
                     )
                 }
-                composable(route = BrainCircleScreen.ResetPassword.name) {
-                    ResetPasswordScreen(
-                        onBackToSignInClick = {
-                            navController.navigate(BrainCircleScreen.SignIn.name) {
-                                popUpTo(BrainCircleScreen.ResetPassword.name) { inclusive = true }
-                                launchSingleTop = true
+            ) {
+                Scaffold(
+                    modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        BrainCircleAppBar(
+                            currentScreen = currentScreen,
+                            canNavigateUp = navController.previousBackStackEntry != null,
+                            navigateUp = { navController.navigateUp() },
+                            isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                            onNavDrawerClick = {
+                                scope.launch {
+                                    drawerState.apply { if (isClosed) open() else close() }
+                                }
                             }
-                        }
-                    )
-                }
-                composable(route = BrainCircleScreen.FindGroups.name) {
+                        )
+                    }
+                ) {
                     FindGroupsScreen()
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun BrainCircleAppPreview() {
+    BrainCircleTheme {
+        NavigationDrawerContent(
+            uiState = BrainCircleUiState(username = "Elvis Sosa"),
+            onSignOutNavDrawerItemClick = { },
+            onSignOutClick = { }
+        )
     }
 }

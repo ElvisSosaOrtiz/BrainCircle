@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.sign_up
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.AuthResponse
@@ -126,6 +127,7 @@ class SignUpViewModel @Inject constructor(
                     }
                 }
         }
+        clearFields()
     }
 
     fun clearMessages(isLoading: Boolean = false) {
@@ -137,6 +139,18 @@ class SignUpViewModel @Inject constructor(
                 repeatPasswordValidationMessage = "",
                 errorMessage = "",
                 isLoading = isLoading
+            )
+        }
+    }
+
+    fun clearFields() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                email = "",
+                password = "",
+                repeatPassword = "",
+                username = "",
+                photo = Uri.EMPTY
             )
         }
     }

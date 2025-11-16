@@ -58,13 +58,17 @@ fun SignUpScreen(
     modifier: Modifier = Modifier,
     onCreateAccountClick: () -> Unit,
     onBackToSignInClick: () -> Unit,
-    viewModel: SignUpViewModel = hiltViewModel()
+    viewModel: SignUpViewModel = hiltViewModel(),
+    topBar: @Composable () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+        topBar = topBar
+    ) {
         Column(
             modifier = modifier
                 .fillMaxSize()
