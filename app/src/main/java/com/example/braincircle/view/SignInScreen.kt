@@ -107,8 +107,8 @@ fun SignInScreen(
                 onValueChange = { viewModel.onPasswordChange(it) }
             )
             if (uiState.passwordValidationMessage.isNotEmpty()) {
-                Text(
-                    text = uiState.passwordValidationMessage,
+                   Text(
+                        text = uiState.passwordValidationMessage,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )

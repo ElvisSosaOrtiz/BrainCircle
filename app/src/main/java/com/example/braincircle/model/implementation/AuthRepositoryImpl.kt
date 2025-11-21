@@ -6,7 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import com.example.braincircle.R
-import com.example.braincircle.model.AuthResponse
+import com.example.braincircle.model.response.AuthResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -178,12 +178,15 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun isUserSignedIn(): Boolean {
-        val instance = FirebaseAuth.getInstance()
-        instance.apply {
-            currentUser?.reload()
-            return currentUser != null
+    override suspend fun reloadUser(): Flow<FirebaseUser?> = callbackFlow {
+        auth.currentUser?.reload()?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                trySend(auth.currentUser)
+            } else {
+                trySend(null)
+            }
         }
+        awaitClose()
     }
 
     override fun signOut() = auth.signOut()

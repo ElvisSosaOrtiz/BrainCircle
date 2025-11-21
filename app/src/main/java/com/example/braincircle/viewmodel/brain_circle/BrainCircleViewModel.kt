@@ -37,10 +37,21 @@ class BrainCircleViewModel @Inject constructor(
         }
     }
 
+    fun reloadUser() {
+        viewModelScope.launch {
+            auth.reloadUser().collect { user ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        username = user?.displayName,
+                        photoUrl = user?.photoUrl?.toString(),
+                        isUserSignedIn = (user != null)
+                    )
+                }
+            }
+        }
+    }
+
     fun signOut() {
         auth.signOut()
-//        _uiState.update { currentState ->
-//            currentState.copy(isUserSignedIn = false)
-//        }
     }
 }

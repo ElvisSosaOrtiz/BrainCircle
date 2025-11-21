@@ -353,19 +353,17 @@ fun BrainCircleApp(
                         currentScreen = currentScreen,
                         canNavigateUp = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() },
-                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
-                        onNavDrawerClick = {
-                            scope.launch {
-                                drawerState.apply { if (isClosed) open() else close() }
-                            }
-                        }
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
                     )
                 }
             )
         }
         composable(route = BrainCircleScreen.SignUp.name) {
             SignUpScreen(
-                onCreateAccountClick = navigateToFindGroups,
+                onCreateAccountClick = {
+                    viewModel.reloadUser()
+                    navigateToFindGroups()
+                },
                 onBackToSignInClick = {
                     navController.navigate(BrainCircleScreen.SignIn.name) {
                         popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }
@@ -377,12 +375,7 @@ fun BrainCircleApp(
                         currentScreen = currentScreen,
                         canNavigateUp = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() },
-                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
-                        onNavDrawerClick = {
-                            scope.launch {
-                                drawerState.apply { if (isClosed) open() else close() }
-                            }
-                        }
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
                     )
                 }
             )
@@ -400,12 +393,7 @@ fun BrainCircleApp(
                         currentScreen = currentScreen,
                         canNavigateUp = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() },
-                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
-                        onNavDrawerClick = {
-                            scope.launch {
-                                drawerState.apply { if (isClosed) open() else close() }
-                            }
-                        }
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
                     )
                 }
             )

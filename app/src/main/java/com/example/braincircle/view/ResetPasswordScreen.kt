@@ -102,6 +102,7 @@ fun ResetPasswordScreen(
                     .padding(horizontal = 48.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                 elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
+                enabled = !uiState.isLoading,
                 onClick = { viewModel.resetPassword() }
             ) {
                 if (uiState.isLoading) {
@@ -118,6 +119,7 @@ fun ResetPasswordScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 48.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimaryContainer),
+                enabled = !uiState.isLoading,
                 onClick = onBackToSignInClick
             ) {
                 Text(
