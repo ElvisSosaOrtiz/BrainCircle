@@ -2,7 +2,7 @@ package com.example.braincircle.viewmodel.reset_password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.braincircle.model.AuthResponse
+import com.example.braincircle.model.response.AuthResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.view.common.isValidEmail
 import dagger.hilt.android.lifecycle.HiltViewModel

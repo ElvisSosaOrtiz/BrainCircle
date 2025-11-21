@@ -1,4 +1,4 @@
-package com.example.braincircle.model
+package com.example.braincircle.model.response
 
 interface AuthResponse {
     data object Success: AuthResponse
