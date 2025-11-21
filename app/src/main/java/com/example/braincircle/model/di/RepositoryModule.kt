@@ -1,8 +1,11 @@
 package com.example.braincircle.model.di
 
 import com.example.braincircle.model.implementation.AuthRepositoryImpl
+import com.example.braincircle.model.implementation.FirestoreRepositoryImpl
 import com.example.braincircle.model.service.AuthRepository
+import com.example.braincircle.model.service.FirestoreRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,4 +18,9 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideAuthRepository(auth: FirebaseAuth): AuthRepository = AuthRepositoryImpl(auth)
+
+    @Provides
+    @Singleton
+    fun provideFirestoreRepository(firestore: FirebaseFirestore): FirestoreRepository =
+        FirestoreRepositoryImpl(firestore)
 }

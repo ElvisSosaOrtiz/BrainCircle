@@ -3,7 +3,7 @@ package com.example.braincircle.viewmodel.sign_in
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.braincircle.model.AuthResponse
+import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.view.common.isValidEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -77,10 +77,10 @@ class SignInViewModel @Inject constructor(
                 }
                 .collect { response ->
                     when (response) {
-                        is AuthResponse.Success -> {
+                        is RepositoryResponse.Success -> {
                             navigateToFindGroups()
                         }
-                        is AuthResponse.Error -> {
+                        is RepositoryResponse.Error -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
                                     errorMessage = response.message,
@@ -112,10 +112,10 @@ class SignInViewModel @Inject constructor(
                 }
                 .collect { response ->
                     when (response) {
-                        is AuthResponse.Success -> {
+                        is RepositoryResponse.Success -> {
                             navigateToFindGroups()
                         }
-                        is AuthResponse.Error -> {
+                        is RepositoryResponse.Error -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
                                     errorMessage = response.message,

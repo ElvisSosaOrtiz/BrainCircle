@@ -6,7 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import com.example.braincircle.R
-import com.example.braincircle.model.response.AuthResponse
+import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -30,14 +30,14 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signInWithEmail(
         email: String,
         password: String
-    ): Flow<AuthResponse> = callbackFlow {
+    ): Flow<RepositoryResponse> = callbackFlow {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    trySend(AuthResponse.Success)
+                    trySend(RepositoryResponse.Success)
                 } else {
                     trySend(
-                        AuthResponse.Error(
+                        RepositoryResponse.Error(
                             message = task.exception?.localizedMessage ?: "Unknown error while signing in"
                         )
                     )
@@ -51,7 +51,7 @@ class AuthRepositoryImpl @Inject constructor(
         password: String,
         username: String,
         photoUri: Uri?
-    ): Flow<AuthResponse> = callbackFlow {
+    ): Flow<RepositoryResponse> = callbackFlow {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -62,10 +62,10 @@ class AuthRepositoryImpl @Inject constructor(
                     auth.currentUser?.updateProfile(profileUpdate)
                         ?.addOnCompleteListener { updateUserTask ->
                             if (updateUserTask.isSuccessful) {
-                                trySend(AuthResponse.Success)
+                                trySend(RepositoryResponse.Success)
                             } else {
                                 trySend(
-                                    AuthResponse.Error(
+                                    RepositoryResponse.Error(
                                         message = updateUserTask.exception?.localizedMessage
                                             ?: "Unknown error while updating user profile"
                                     )
@@ -74,7 +74,7 @@ class AuthRepositoryImpl @Inject constructor(
                         }
                 } else {
                     trySend(
-                        AuthResponse.Error(
+                        RepositoryResponse.Error(
                             message = task.exception?.localizedMessage
                                 ?: "Unknown error while creating account"
                         )
@@ -84,7 +84,7 @@ class AuthRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
-    override suspend fun signInWithGoogle(@ApplicationContext context: Context): Flow<AuthResponse> =
+    override suspend fun signInWithGoogle(@ApplicationContext context: Context): Flow<RepositoryResponse> =
         callbackFlow {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -120,10 +120,10 @@ class AuthRepositoryImpl @Inject constructor(
                             auth.signInWithCredential(firebaseCredential)
                                 .addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
-                                        trySend(AuthResponse.Success)
+                                        trySend(RepositoryResponse.Success)
                                     } else {
                                         trySend(
-                                            AuthResponse.Error(
+                                            RepositoryResponse.Error(
                                                 message = task.exception?.localizedMessage
                                                     ?: "Unknown error while signing in with Google"
                                             )
@@ -132,7 +132,7 @@ class AuthRepositoryImpl @Inject constructor(
                                 }
                         } catch (e: GoogleIdTokenParsingException) {
                             trySend(
-                                AuthResponse.Error(
+                                RepositoryResponse.Error(
                                     message = e.localizedMessage
                                         ?: "Unknown error while parsing Google ID token"
                                 )
@@ -142,7 +142,7 @@ class AuthRepositoryImpl @Inject constructor(
                 }
             } catch (e: Exception) {
                 trySend(
-                    AuthResponse.Error(
+                    RepositoryResponse.Error(
                         message = e.localizedMessage
                             ?: "Unknown error while creating custom credential"
                     )
@@ -151,14 +151,14 @@ class AuthRepositoryImpl @Inject constructor(
             awaitClose()
         }
 
-    override suspend fun sendPasswordReset(email: String): Flow<AuthResponse> = callbackFlow {
+    override suspend fun sendPasswordReset(email: String): Flow<RepositoryResponse> = callbackFlow {
         auth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    trySend(AuthResponse.Success)
+                    trySend(RepositoryResponse.Success)
                 } else {
                     trySend(
-                        AuthResponse.Error(
+                        RepositoryResponse.Error(
                             message = task.exception?.localizedMessage
                                 ?: "Unknown error while sending password reset"
                         )

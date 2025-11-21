@@ -1,5 +1,6 @@
 package com.example.braincircle.model.data
 
+import android.net.Uri
 import com.google.firebase.firestore.DocumentId
 
 /**
@@ -16,6 +17,7 @@ data class User(
     @DocumentId val uid: String = "",
     val name: String = "",
     val email: String = "",
+    val photoUri: Uri? = Uri.EMPTY,
     val major: String = "",
     val availabilityNotes: String = "",
     val myGroups: List<String> = emptyList()

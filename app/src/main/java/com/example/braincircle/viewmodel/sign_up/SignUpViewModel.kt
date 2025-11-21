@@ -3,7 +3,7 @@ package com.example.braincircle.viewmodel.sign_up
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.braincircle.model.AuthResponse
+import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.view.common.isValidEmail
 import com.example.braincircle.view.common.isValidPassword
@@ -113,10 +113,10 @@ class SignUpViewModel @Inject constructor(
                 }
                 .collect { response ->
                     when (response) {
-                        is AuthResponse.Success -> {
+                        is RepositoryResponse.Success -> {
                             navigateToFindGroups()
                         }
-                        is AuthResponse.Error -> {
+                        is RepositoryResponse.Error -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
                                     errorMessage = response.message,

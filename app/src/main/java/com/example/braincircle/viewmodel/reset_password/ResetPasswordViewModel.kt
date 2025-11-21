@@ -2,7 +2,7 @@ package com.example.braincircle.viewmodel.reset_password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.braincircle.model.AuthResponse
+import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.view.common.isValidEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,7 +56,7 @@ class ResetPasswordViewModel @Inject constructor(
                 }
                 .collect { response ->
                     when (response) {
-                        is AuthResponse.Success -> {
+                        is RepositoryResponse.Success -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
                                     confirmationMessage = "Password reset request sent. Check your email.",
@@ -64,7 +64,7 @@ class ResetPasswordViewModel @Inject constructor(
                                 )
                             }
                         }
-                        is AuthResponse.Error -> {
+                        is RepositoryResponse.Error -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
                                     errorMessage = response.message,
