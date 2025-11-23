@@ -6,6 +6,7 @@ import com.example.braincircle.model.data.StudyGroup
 import com.example.braincircle.model.data.User
 import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.FirestoreRepository
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
@@ -28,7 +29,21 @@ class FirestoreRepositoryImpl @Inject constructor(
                 .add(group)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        trySend(RepositoryResponse.Success)
+                        firestore.collection(USERS_COLLECTION)
+                            .document(group.adminId)
+                            .update(User::myGroups.name, FieldValue.arrayUnion(group.groupId))
+                            .addOnCompleteListener { updateTask ->
+                                if (updateTask.isSuccessful) {
+                                    trySend(RepositoryResponse.Success)
+                                } else {
+                                    trySend(
+                                        RepositoryResponse.Error(
+                                            message = updateTask.exception?.localizedMessage
+                                                ?: "Unknown error while adding group id to user's groups array"
+                                        )
+                                    )
+                                }
+                            }
                     } else {
                         trySend(
                             RepositoryResponse.Error(
@@ -137,6 +152,29 @@ class FirestoreRepositoryImpl @Inject constructor(
                             RepositoryResponse.Error(
                                 message = task.exception?.localizedMessage
                                     ?: "Unknown error while deleting study group"
+                            )
+                        )
+                    }
+                }
+            awaitClose()
+        }
+
+    override suspend fun leaveStudyGroup(
+        studentId: String,
+        groupId: String
+    ): Flow<RepositoryResponse> =
+        callbackFlow {
+            firestore.collection(USERS_COLLECTION)
+                .document(studentId)
+                .update(User::myGroups.name, FieldValue.arrayRemove(groupId))
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        trySend(RepositoryResponse.Success)
+                    } else {
+                        trySend(
+                            RepositoryResponse.Error(
+                                message = task.exception?.localizedMessage
+                                    ?: "Unknown error while leaving group"
                             )
                         )
                     }

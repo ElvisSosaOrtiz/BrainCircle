@@ -3,8 +3,10 @@ package com.example.braincircle.viewmodel.sign_in
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.braincircle.model.data.User
 import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
+import com.example.braincircle.model.service.FirestoreRepository
 import com.example.braincircle.view.common.isValidEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val auth: AuthRepository
+    private val auth: AuthRepository,
+    private val firestore: FirestoreRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignInUiState())
@@ -80,6 +83,7 @@ class SignInViewModel @Inject constructor(
                         is RepositoryResponse.Success -> {
                             navigateToFindGroups()
                         }
+
                         is RepositoryResponse.Error -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
@@ -113,8 +117,9 @@ class SignInViewModel @Inject constructor(
                 .collect { response ->
                     when (response) {
                         is RepositoryResponse.Success -> {
-                            navigateToFindGroups()
+                            createUserDocument(navigateToFindGroups)
                         }
+
                         is RepositoryResponse.Error -> {
                             _uiState.update { currentState ->
                                 currentState.copy(
@@ -126,6 +131,40 @@ class SignInViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private suspend fun createUserDocument(navigateToFindGroups: () -> Unit) {
+        val user = User(
+            uid = auth.currentUser()!!.uid,
+            name = auth.currentUser()!!.displayName!!,
+            email = auth.currentUser()!!.email!!,
+            photoUri = auth.currentUser()!!.photoUrl
+        )
+        firestore.createUserProfile(user)
+            .catch { e ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        errorMessage = e.localizedMessage ?: "Error creating user document",
+                        isLoading = false
+                    )
+                }
+            }
+            .collect { response ->
+                when (response) {
+                    is RepositoryResponse.Success -> {
+                        navigateToFindGroups()
+                    }
+
+                    is RepositoryResponse.Error -> {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                errorMessage = response.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+            }
     }
 
     fun clearMessages(isLoading: Boolean = false) {

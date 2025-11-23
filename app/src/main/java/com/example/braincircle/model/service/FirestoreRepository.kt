@@ -18,4 +18,5 @@ interface FirestoreRepository {
     suspend fun getUserProfile(userId: String): Flow<User?>
     suspend fun createUserProfile(user: User): Flow<RepositoryResponse>
     suspend fun updateUserProfile(user: User): Flow<RepositoryResponse>
+    suspend fun leaveStudyGroup(studentId: String, groupId: String): Flow<RepositoryResponse>
 }
