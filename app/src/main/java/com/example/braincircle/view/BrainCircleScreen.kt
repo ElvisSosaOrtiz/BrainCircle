@@ -73,10 +73,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.braincircle.R
@@ -89,7 +91,8 @@ enum class BrainCircleScreen(@param:StringRes val title: Int) {
     SignIn(title = R.string.sign_in_title),
     SignUp(title = R.string.sign_up_title),
     ResetPassword(title = R.string.reset_password_title),
-    FindGroups(title = R.string.app_name)
+    FindGroups(title = R.string.app_name),
+    GroupDetails(title = R.string.group_details)
 }
 
 @Composable
@@ -98,6 +101,7 @@ fun BrainCircleAppBar(
     currentScreen: BrainCircleScreen,
     canNavigateUp: Boolean,
     navigateUp: () -> Unit,
+    groupName: String = "",
     onNavDrawerClick: () -> Unit = {},
     isInGroupsListScreen: Boolean = false
 ) {
@@ -168,7 +172,7 @@ fun BrainCircleAppBar(
         CenterAlignedTopAppBar(
             modifier = modifier,
             title = {
-                Text(stringResource(currentScreen.title))
+                Text(stringResource(currentScreen.title, groupName))
             },
             colors = TopAppBarDefaults.mediumTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -433,7 +437,60 @@ fun BrainCircleApp(
                         )
                     }
                 ) {
-                    FindGroupsScreen()
+                    FindGroupsScreen(
+                        onGroupClick = { groupId, groupName ->
+                            navController.navigate("${BrainCircleScreen.GroupDetails.name}/$groupId/$groupName")
+                        }
+                    )
+                }
+            }
+        }
+        composable(
+            route = "${BrainCircleScreen.GroupDetails.name}/{groupId}/{groupName}",
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType },
+                navArgument("groupName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+            val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
+
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    NavigationDrawerContent(
+                        uiState = uiState,
+                        onSignOutNavDrawerItemClick = { scope.launch { drawerState.close() } },
+                        onSignOutClick = {
+                            viewModel.signOut()
+                            navController.navigate(BrainCircleScreen.SignIn.name) {
+                                popUpTo(BrainCircleScreen.FindGroups.name) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+            ) {
+                Scaffold(
+                    modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        BrainCircleAppBar(
+                            currentScreen = currentScreen,
+                            canNavigateUp = navController.previousBackStackEntry != null,
+                            navigateUp = { navController.navigateUp() },
+                            groupName = groupName,
+                            isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                            onNavDrawerClick = {
+                                scope.launch {
+                                    drawerState.apply { if (isClosed) open() else close() }
+                                }
+                            }
+                        )
+                    }
+                ) {
+                    GroupDetailsScreen(groupId = groupId)
                 }
             }
         }

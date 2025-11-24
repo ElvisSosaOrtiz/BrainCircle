@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun GroupDetailsScreen(modifier: Modifier = Modifier) {
+fun GroupDetailsScreen(
+    modifier: Modifier = Modifier,
+    groupId: String
+) {
 
 }
