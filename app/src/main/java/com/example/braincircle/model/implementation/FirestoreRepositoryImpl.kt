@@ -8,6 +8,7 @@ import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.FirestoreRepository
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -112,13 +113,15 @@ class FirestoreRepositoryImpl @Inject constructor(
 
     override suspend fun updateGroupDetails(group: StudyGroup): Flow<RepositoryResponse> =
         callbackFlow {
-            val groupMap = hashMapOf<String, Any>(
+            val groupMap = hashMapOf<String, Any?>(
                 StudyGroup::name.name to group.name,
                 StudyGroup::courseCode.name to group.courseCode,
                 StudyGroup::courseTitle.name to group.courseTitle,
                 StudyGroup::courseDept.name to group.courseDept,
                 StudyGroup::description.name to group.description,
-                StudyGroup::meetingDetails.name to group.meetingDetails
+                StudyGroup::locationName.name to group.locationName,
+                StudyGroup::locationLink.name to group.locationLink,
+                StudyGroup::meetingDate.name to group.meetingDate,
             )
 
             firestore.collection(STUDY_GROUPS_COLLECTION)
@@ -242,7 +245,15 @@ class FirestoreRepositoryImpl @Inject constructor(
 
     override suspend fun createUserProfile(user: User): Flow<RepositoryResponse> = callbackFlow {
         firestore.collection(USERS_COLLECTION)
-            .add(user)
+            .document(user.uid)
+            .set(
+                User(
+                    name = user.name,
+                    email = user.email,
+                    photoUri = user.photoUri
+                ),
+                SetOptions.merge()
+            )
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     trySend(RepositoryResponse.Success)

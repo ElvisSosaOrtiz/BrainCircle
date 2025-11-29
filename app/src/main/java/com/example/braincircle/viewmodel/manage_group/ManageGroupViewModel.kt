@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.manage_group
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.data.StudyGroup
@@ -18,17 +19,20 @@ import javax.inject.Inject
 @HiltViewModel
 class ManageGroupViewModel @Inject constructor(
     val firestore: FirestoreRepository,
-    val auth: AuthRepository
+    val auth: AuthRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val groupId: String = checkNotNull(savedStateHandle["groupId"])
 
     private val _uiState = MutableStateFlow(ManageGroupUiState())
     val uiState: StateFlow<ManageGroupUiState> = _uiState.asStateFlow()
 
     init {
-        getGroup()
+        getGroup(groupId)
     }
 
-    private fun getGroup() {
+    private fun getGroup(id: String) {
         _uiState.update { currentState ->
             currentState.copy(
                 errorMessage = "",
@@ -36,7 +40,7 @@ class ManageGroupViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            firestore.getStudyGroup(_uiState.value.groupId)
+            firestore.getStudyGroup(id)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -55,7 +59,7 @@ class ManageGroupViewModel @Inject constructor(
                                 courseTitle = group.courseTitle,
                                 courseDept = group.courseDept,
                                 description = group.description,
-                                meetingDetails = group.meetingDetails,
+                                meetingDetails = group.locationName,
                                 isAdmin = group.adminId == auth.currentUser()!!.uid,
                                 isLoading = false
                             )
@@ -89,7 +93,7 @@ class ManageGroupViewModel @Inject constructor(
                         courseTitle = courseTitle,
                         courseDept = courseDept,
                         description = description,
-                        meetingDetails = meetingDetails
+                        locationName = meetingDetails
                     )
                     firestore.updateGroupDetails(group)
                         .catch { e ->

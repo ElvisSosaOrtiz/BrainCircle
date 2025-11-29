@@ -101,7 +101,7 @@ fun BrainCircleAppBar(
     currentScreen: BrainCircleScreen,
     canNavigateUp: Boolean,
     navigateUp: () -> Unit,
-    groupName: String = "",
+    title: String = "",
     onNavDrawerClick: () -> Unit = {},
     isInGroupsListScreen: Boolean = false
 ) {
@@ -172,7 +172,7 @@ fun BrainCircleAppBar(
         CenterAlignedTopAppBar(
             modifier = modifier,
             title = {
-                Text(stringResource(currentScreen.title, groupName))
+                Text(stringResource(currentScreen.title, title))
             },
             colors = TopAppBarDefaults.mediumTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -452,7 +452,6 @@ fun BrainCircleApp(
                 navArgument("groupName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
             val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
 
             ModalNavigationDrawer(
@@ -480,7 +479,7 @@ fun BrainCircleApp(
                             currentScreen = currentScreen,
                             canNavigateUp = navController.previousBackStackEntry != null,
                             navigateUp = { navController.navigateUp() },
-                            groupName = groupName,
+                            title = groupName,
                             isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
                             onNavDrawerClick = {
                                 scope.launch {
@@ -490,7 +489,7 @@ fun BrainCircleApp(
                         )
                     }
                 ) {
-                    GroupDetailsScreen(groupId = groupId)
+                    GroupDetailsScreen()
                 }
             }
         }

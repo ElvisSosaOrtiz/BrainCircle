@@ -40,7 +40,7 @@ class CreateGroupViewModel @Inject constructor(
                     courseTitle = courseTitle,
                     courseDept = courseDept,
                     description = description,
-                    meetingDetails = meetingDetails,
+                    locationName = meetingDetails,
                 )
                 firestore.createStudyGroup(studyGroup)
                     .catch { e ->

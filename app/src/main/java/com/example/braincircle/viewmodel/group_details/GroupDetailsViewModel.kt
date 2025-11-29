@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.group_details
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.response.RepositoryResponse
@@ -17,17 +18,20 @@ import javax.inject.Inject
 @HiltViewModel
 class GroupDetailsViewModel @Inject constructor(
     private val firestore: FirestoreRepository,
-    private val auth: AuthRepository
+    private val auth: AuthRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val groupId: String = checkNotNull(savedStateHandle["groupId"])
 
     private val _uiState = MutableStateFlow(GroupDetailsUiState())
     val uiState: StateFlow<GroupDetailsUiState> = _uiState.asStateFlow()
 
     init {
-        getGroupDetails()
+        getGroupDetails(groupId)
     }
 
-    private fun getGroupDetails() {
+    private fun getGroupDetails(id: String) {
         _uiState.update { currentState ->
             currentState.copy(
                 errorMessage = "",
@@ -35,7 +39,7 @@ class GroupDetailsViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            firestore.getStudyGroup(_uiState.value.groupId)
+            firestore.getStudyGroup(id)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -54,7 +58,9 @@ class GroupDetailsViewModel @Inject constructor(
                                 courseTitle = group.courseTitle,
                                 courseDept = group.courseDept,
                                 description = group.description,
-                                meetingDetails = group.meetingDetails,
+                                locationName = group.locationName,
+                                locationLink = group.locationLink,
+                                meetingDate = group.meetingDate,
                                 isAdmin = group.adminId == auth.currentUser()!!.uid,
                                 isLoading = false,
                             )

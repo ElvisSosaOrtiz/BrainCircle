@@ -1,6 +1,8 @@
 package com.example.braincircle.model.data
 
+import android.net.Uri
 import com.google.firebase.firestore.DocumentId
+import java.util.Date
 
 /**
  * Model for a study group.
@@ -13,7 +15,9 @@ import com.google.firebase.firestore.DocumentId
  * @param adminId The uid for the admin of the study group.
  * @param members A list of uids for the members of the study group.
  * @param description A description of the study group.
- * @param meetingDetails Details about the meeting for the study group.
+ * @param locationName Name of the location of the meeting or class.
+ * @param locationLink Location of the meeting or class.
+ * @param meetingDate Date and time of the meeting or class.
  */
 data class StudyGroup(
     @DocumentId val groupId: String = "",
@@ -24,5 +28,7 @@ data class StudyGroup(
     val adminId: String = "",
     val members: List<String> = emptyList(),
     val description: String = "",
-    val meetingDetails: String = ""
+    val locationName: String = "",
+    val locationLink: Uri = Uri.EMPTY,
+    val meetingDate: Date? = null
 )
