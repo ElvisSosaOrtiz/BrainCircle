@@ -14,7 +14,7 @@ interface AuthRepository {
         password: String,
         username: String,
         photoUri: Uri?
-    ): Flow<RepositoryResponse>
+    ): Flow<FirebaseUser?>
 
     suspend fun signInWithGoogle(@ApplicationContext context: Context): Flow<RepositoryResponse>
     suspend fun sendPasswordReset(email: String): Flow<RepositoryResponse>

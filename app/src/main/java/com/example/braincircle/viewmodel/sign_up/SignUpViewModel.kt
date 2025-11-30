@@ -115,18 +115,20 @@ class SignUpViewModel @Inject constructor(
                     }
                 }
                 .collect { response ->
-                    when (response) {
-                        is RepositoryResponse.Success -> {
-                            createUserDocument(navigateToFindGroups)
-                        }
-
-                        is RepositoryResponse.Error -> {
-                            _uiState.update { currentState ->
-                                currentState.copy(
-                                    errorMessage = response.message,
-                                    isLoading = false
-                                )
-                            }
+                    if (response != null) {
+                        val user = User(
+                            uid = response.uid,
+                            name = response.displayName!!,
+                            email = response.email!!,
+                            photoUri = response.photoUrl
+                        )
+                        createUserDocument(user, navigateToFindGroups)
+                    } else {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                errorMessage = "Account creation failed",
+                                isLoading = false
+                            )
                         }
                     }
                 }
@@ -134,13 +136,7 @@ class SignUpViewModel @Inject constructor(
         clearFields()
     }
 
-    private suspend fun createUserDocument(navigateToFindGroups: () -> Unit) {
-        val user = User(
-            uid = auth.currentUser()!!.uid,
-            name = auth.currentUser()!!.displayName!!,
-            email = auth.currentUser()!!.email!!,
-            photoUri = auth.currentUser()!!.photoUrl
-        )
+    private suspend fun createUserDocument(user: User, navigateToFindGroups: () -> Unit) {
         firestore.createUserProfile(user)
             .catch { e ->
                 _uiState.update { currentState ->

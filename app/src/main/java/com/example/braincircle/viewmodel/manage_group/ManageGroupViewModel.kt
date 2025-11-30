@@ -7,6 +7,7 @@ import com.example.braincircle.model.data.StudyGroup
 import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.model.service.FirestoreRepository
+import com.example.braincircle.viewmodel.create_group.CreateGroupUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

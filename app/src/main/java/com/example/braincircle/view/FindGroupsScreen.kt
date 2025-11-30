@@ -1,8 +1,8 @@
 package com.example.braincircle.view
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +26,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.braincircle.model.data.StudyGroup
 import com.example.braincircle.ui.theme.BrainCircleTheme
+import com.example.braincircle.viewmodel.find_groups.FindGroupsUiState
 import com.example.braincircle.viewmodel.find_groups.FindGroupsViewModel
 
 @Composable
@@ -35,19 +36,45 @@ fun FindGroupsScreen(
     onGroupClick: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    FindGroupsScreenStateless(
+        modifier = modifier,
+        uiState = uiState,
+        onGroupClick = onGroupClick
+    )
+}
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (uiState.isLoading) {
-            item { CircularProgressIndicator() }
-        } else if (uiState.groups.isEmpty()) {
-            item { Text(text = "There are no groups in this moment") }
-        } else {
+@Composable
+fun FindGroupsScreenStateless(
+    modifier: Modifier = Modifier,
+    uiState: FindGroupsUiState,
+    onGroupClick: (String, String) -> Unit
+) {
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (uiState.groups.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "There are no groups in this moment",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             items(uiState.groups) { group ->
                 GroupCard(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(4.dp),
                     group = group,
                     onGroupClick = onGroupClick
                 )
@@ -110,34 +137,108 @@ fun GroupCard(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFFF7FBF1)
 @Composable
 fun FindGroupsScreenLightPreview() {
     BrainCircleTheme {
-        GroupCard(
-            group = StudyGroup(
-                name = "Group name",
-                courseCode = "Course code",
-                courseTitle = "Course title",
-                courseDept = "Course department"
+        FindGroupsScreenStateless(
+            uiState = FindGroupsUiState(
+                groups = listOf(
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    )
+                )
             ),
             onGroupClick = { _, _ -> }
         )
+//        GroupCard(
+//            group = StudyGroup(
+//                name = "Group name",
+//                courseCode = "Course code",
+//                courseTitle = "Course title",
+//                courseDept = "Course department"
+//            ),
+//            onGroupClick = { _, _ -> }
+//        )
     }
 }
 
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, backgroundColor = 0xFF10140F)
 @Composable
 fun FindGroupsScreenDarkPreview() {
-    BrainCircleTheme {
-        GroupCard(
-            group = StudyGroup(
-                name = "Group name",
-                courseCode = "Course code",
-                courseTitle = "Course title",
-                courseDept = "Course department"
+    BrainCircleTheme(darkTheme = true) {
+        FindGroupsScreenStateless(
+            uiState = FindGroupsUiState(
+                groups = listOf(
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    ),
+                    StudyGroup(
+                        name = "Group name",
+                        courseCode = "Course code",
+                        courseTitle = "Course title",
+                        courseDept = "Course department"
+                    )
+                )
             ),
             onGroupClick = { _, _ -> }
         )
+//        GroupCard(
+//            group = StudyGroup(
+//                name = "Group name",
+//                courseCode = "Course code",
+//                courseTitle = "Course title",
+//                courseDept = "Course department"
+//            ),
+//            onGroupClick = { _, _ -> }
+//        )
     }
 }

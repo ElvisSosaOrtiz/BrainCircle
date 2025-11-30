@@ -1,4 +1,4 @@
-package com.example.braincircle.viewmodel.manage_group
+package com.example.braincircle.viewmodel.create_group
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,8 +21,8 @@ class CreateGroupViewModel @Inject constructor(
     val auth: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ManageGroupUiState())
-    val uiState: StateFlow<ManageGroupUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CreateGroupUiState())
+    val uiState: StateFlow<CreateGroupUiState> = _uiState.asStateFlow()
 
     fun createGroup(navToMyGroups: () -> Unit) {
         _uiState.update { currentState ->

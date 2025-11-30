@@ -2,6 +2,7 @@ package com.example.braincircle.model.implementation
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -51,7 +52,7 @@ class AuthRepositoryImpl @Inject constructor(
         password: String,
         username: String,
         photoUri: Uri?
-    ): Flow<RepositoryResponse> = callbackFlow {
+    ): Flow<FirebaseUser?> = callbackFlow {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -62,23 +63,15 @@ class AuthRepositoryImpl @Inject constructor(
                     auth.currentUser?.updateProfile(profileUpdate)
                         ?.addOnCompleteListener { updateUserTask ->
                             if (updateUserTask.isSuccessful) {
-                                trySend(RepositoryResponse.Success)
+                                trySend(auth.currentUser)
                             } else {
-                                trySend(
-                                    RepositoryResponse.Error(
-                                        message = updateUserTask.exception?.localizedMessage
-                                            ?: "Unknown error while updating user profile"
-                                    )
-                                )
+                                Log.e("AuthRepositoryImpl", updateUserTask.exception?.localizedMessage ?: "Unknown error while updating user profile")
+                                trySend(null)
                             }
                         }
                 } else {
-                    trySend(
-                        RepositoryResponse.Error(
-                            message = task.exception?.localizedMessage
-                                ?: "Unknown error while creating account"
-                        )
-                    )
+                    Log.e("AuthRepositoryImpl", task.exception?.localizedMessage ?: "Unknown error while creating account")
+                    trySend(null)
                 }
             }
         awaitClose()

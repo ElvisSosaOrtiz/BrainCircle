@@ -3,7 +3,6 @@
 package com.example.braincircle.view
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -25,7 +24,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -34,6 +35,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -92,6 +94,7 @@ enum class BrainCircleScreen(@param:StringRes val title: Int) {
     SignUp(title = R.string.sign_up_title),
     ResetPassword(title = R.string.reset_password_title),
     FindGroups(title = R.string.app_name),
+    MyGroups(title = R.string.my_groups),
     GroupDetails(title = R.string.group_details)
 }
 
@@ -213,8 +216,11 @@ fun BrainCircleAppBar(
 fun NavigationDrawerContent(
     modifier: Modifier = Modifier,
     uiState: BrainCircleUiState,
-    onSignOutNavDrawerItemClick: () -> Unit,
-    onSignOutClick: () -> Unit
+    currentScreen: BrainCircleScreen,
+    onFindGroupsItemClick: () -> Unit = {},
+    onMyGroupsItemClick: () -> Unit = {},
+    onSignOutNavDrawerItemClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {}
 ) {
     val username = uiState.username ?: ""
     val photoUrl = uiState.photoUrl ?: ""
@@ -272,6 +278,28 @@ fun NavigationDrawerContent(
             }
             Spacer(Modifier.padding(top = 12.dp))
             HorizontalDivider()
+            NavigationDrawerItem(
+                label = { Text(text = stringResource(R.string.find_groups_title)) },
+                selected = currentScreen == BrainCircleScreen.FindGroups,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = stringResource(R.string.find_groups_title)
+                    )
+                },
+                onClick = onFindGroupsItemClick
+            )
+            NavigationDrawerItem(
+                label = { Text(text = stringResource(R.string.my_groups)) },
+                selected = currentScreen == BrainCircleScreen.MyGroups,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Groups,
+                        contentDescription = stringResource(R.string.my_groups)
+                    )
+                },
+                onClick = onMyGroupsItemClick
+            )
             NavigationDrawerItem(
                 label = { Text(text = stringResource(R.string.sign_out)) },
                 selected = false,
@@ -357,7 +385,7 @@ fun BrainCircleApp(
                         currentScreen = currentScreen,
                         canNavigateUp = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() },
-                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
                     )
                 }
             )
@@ -379,7 +407,7 @@ fun BrainCircleApp(
                         currentScreen = currentScreen,
                         canNavigateUp = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() },
-                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
                     )
                 }
             )
@@ -397,7 +425,7 @@ fun BrainCircleApp(
                         currentScreen = currentScreen,
                         canNavigateUp = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() },
-                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
                     )
                 }
             )
@@ -408,17 +436,26 @@ fun BrainCircleApp(
                 drawerContent = {
                     NavigationDrawerContent(
                         uiState = uiState,
-                        onSignOutNavDrawerItemClick = { scope.launch { drawerState.close() } },
-                        onSignOutClick = {
-                            viewModel.signOut()
-                            navController.navigate(BrainCircleScreen.SignIn.name) {
+                        currentScreen = currentScreen,
+                        onMyGroupsItemClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(BrainCircleScreen.MyGroups.name) {
                                 popUpTo(BrainCircleScreen.FindGroups.name) {
                                     inclusive = true
                                 }
                                 launchSingleTop = true
                             }
+                        },
+                        onSignOutNavDrawerItemClick = { scope.launch { drawerState.close() } }
+                    ) {
+                        viewModel.signOut()
+                        navController.navigate(BrainCircleScreen.SignIn.name) {
+                            popUpTo(BrainCircleScreen.FindGroups.name) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
-                    )
+                    }
                 }
             ) {
                 Scaffold(
@@ -428,7 +465,7 @@ fun BrainCircleApp(
                             currentScreen = currentScreen,
                             canNavigateUp = navController.previousBackStackEntry != null,
                             navigateUp = { navController.navigateUp() },
-                            isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                            isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
                             onNavDrawerClick = {
                                 scope.launch {
                                     drawerState.apply { if (isClosed) open() else close() }
@@ -445,31 +482,31 @@ fun BrainCircleApp(
                 }
             }
         }
-        composable(
-            route = "${BrainCircleScreen.GroupDetails.name}/{groupId}/{groupName}",
-            arguments = listOf(
-                navArgument("groupId") { type = NavType.StringType },
-                navArgument("groupName") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
-
+        composable(route = BrainCircleScreen.MyGroups.name) {
             ModalNavigationDrawer(
                 drawerState = drawerState,
                 drawerContent = {
                     NavigationDrawerContent(
                         uiState = uiState,
-                        onSignOutNavDrawerItemClick = { scope.launch { drawerState.close() } },
-                        onSignOutClick = {
-                            viewModel.signOut()
-                            navController.navigate(BrainCircleScreen.SignIn.name) {
-                                popUpTo(BrainCircleScreen.FindGroups.name) {
+                        currentScreen = currentScreen,
+                        onFindGroupsItemClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(BrainCircleScreen.FindGroups.name) {
+                                popUpTo(BrainCircleScreen.MyGroups.name) {
                                     inclusive = true
                                 }
-                                launchSingleTop = true
                             }
+                        },
+                        onSignOutNavDrawerItemClick = { scope.launch { drawerState.close() } }
+                    ) {
+                        viewModel.signOut()
+                        navController.navigate(BrainCircleScreen.SignIn.name) {
+                            popUpTo(BrainCircleScreen.FindGroups.name) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
-                    )
+                    }
                 }
             ) {
                 Scaffold(
@@ -479,31 +516,71 @@ fun BrainCircleApp(
                             currentScreen = currentScreen,
                             canNavigateUp = navController.previousBackStackEntry != null,
                             navigateUp = { navController.navigateUp() },
-                            title = groupName,
-                            isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name,
+                            isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
                             onNavDrawerClick = {
                                 scope.launch {
                                     drawerState.apply { if (isClosed) open() else close() }
                                 }
                             }
                         )
+                    },
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            onClick = {}
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 ) {
-                    GroupDetailsScreen()
+                    MyGroupsScreen()
                 }
+            }
+        }
+        composable(
+            route = "${BrainCircleScreen.GroupDetails.name}/{groupId}/{groupName}",
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType },
+                navArgument("groupName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
+
+            Scaffold(
+                modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        title = groupName,
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
+                        onNavDrawerClick = {
+                            scope.launch {
+                                drawerState.apply { if (isClosed) open() else close() }
+                            }
+                        }
+                    )
+                }
+            ) {
+                GroupDetailsScreen()
             }
         }
     }
 }
 
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true)
 @Composable
 fun BrainCircleAppPreview() {
     BrainCircleTheme {
         NavigationDrawerContent(
             uiState = BrainCircleUiState(username = "Elvis Sosa"),
-            onSignOutNavDrawerItemClick = { },
-            onSignOutClick = { }
-        )
+            currentScreen = BrainCircleScreen.FindGroups,
+            onSignOutNavDrawerItemClick = { }
+        ) { }
     }
 }
