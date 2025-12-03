@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.manage_group
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,7 +8,6 @@ import com.example.braincircle.model.data.StudyGroup
 import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.model.service.FirestoreRepository
-import com.example.braincircle.viewmodel.create_group.CreateGroupUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,7 +60,9 @@ class ManageGroupViewModel @Inject constructor(
                                 courseTitle = group.courseTitle,
                                 courseDept = group.courseDept,
                                 description = group.description,
-                                meetingDetails = group.locationName,
+                                locationName = group.locationName,
+                                locationLink = Uri.parse(group.locationLink),
+                                meetingDate = group.meetingDate,
                                 isAdmin = group.adminId == auth.currentUser()!!.uid,
                                 isLoading = false
                             )
@@ -94,7 +96,9 @@ class ManageGroupViewModel @Inject constructor(
                         courseTitle = courseTitle,
                         courseDept = courseDept,
                         description = description,
-                        locationName = meetingDetails
+                        locationName = locationName,
+                        locationLink = locationLink.toString(),
+                        meetingDate = meetingDate
                     )
                     firestore.updateGroupDetails(group)
                         .catch { e ->

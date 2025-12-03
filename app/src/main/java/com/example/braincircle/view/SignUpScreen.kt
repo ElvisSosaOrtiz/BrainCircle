@@ -56,7 +56,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
-    onCreateAccountClick: () -> Unit,
+    onCreateAccountClick: (String, String) -> Unit,
     onBackToSignInClick: () -> Unit,
     viewModel: SignUpViewModel = hiltViewModel(),
     topBar: @Composable () -> Unit
@@ -68,10 +68,11 @@ fun SignUpScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = topBar
-    ) {
+    ) { paddingValues ->
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .background(MaterialTheme.colorScheme.primaryContainer),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -166,7 +167,7 @@ fun SignUpScreen(
                 colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                 elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
                 enabled = !uiState.isLoading,
-                onClick = { viewModel.signUp(onCreateAccountClick) }
+                onClick = { viewModel.signUp { onCreateAccountClick(uiState.username, uiState.photo?.toString() ?: "") } }
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator()

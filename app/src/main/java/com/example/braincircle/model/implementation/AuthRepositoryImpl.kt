@@ -56,14 +56,22 @@ class AuthRepositoryImpl @Inject constructor(
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val user = auth.currentUser
                     val profileUpdate = UserProfileChangeRequest.Builder()
                         .setDisplayName(username)
                         .setPhotoUri(photoUri)
                         .build()
-                    auth.currentUser?.updateProfile(profileUpdate)
+                    user?.updateProfile(profileUpdate)
                         ?.addOnCompleteListener { updateUserTask ->
                             if (updateUserTask.isSuccessful) {
-                                trySend(auth.currentUser)
+                                user.reload().addOnCompleteListener { reloadTask ->
+                                    if (reloadTask.isSuccessful) {
+                                        trySend(user)
+                                    } else {
+                                        Log.e("AuthRepositoryImpl", reloadTask.exception?.localizedMessage ?: "Unknown error while reloading user")
+                                        trySend(null)
+                                    }
+                                }
                             } else {
                                 Log.e("AuthRepositoryImpl", updateUserTask.exception?.localizedMessage ?: "Unknown error while updating user profile")
                                 trySend(null)

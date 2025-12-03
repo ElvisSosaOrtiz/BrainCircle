@@ -1,6 +1,5 @@
 package com.example.braincircle.model.data
 
-import android.net.Uri
 import com.google.firebase.firestore.DocumentId
 import java.util.Date
 
@@ -29,6 +28,6 @@ data class StudyGroup(
     val members: List<String> = emptyList(),
     val description: String = "",
     val locationName: String = "",
-    val locationLink: Uri = Uri.EMPTY,
+    val locationLink: String = "",
     val meetingDate: Date? = null
 )

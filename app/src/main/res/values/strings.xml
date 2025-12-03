@@ -30,6 +30,7 @@
     <string name="user_profile_picture">User profile picture</string>
     <string name="sign_out_confirmation_question">Are you sure you want to sign out?</string>
     <string name="cancel">Cancel</string>
-    <string name="group_details">%1$s</string>
-    <string name="my_groups">My groups</string>
+    <string name="group_details_title">%1$s</string>
+    <string name="my_groups_title">My groups</string>
+    <string name="create_group_screen_title">Create a new group</string>
 </resources>

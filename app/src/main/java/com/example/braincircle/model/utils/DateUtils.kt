@@ -6,7 +6,7 @@ import java.util.Locale
 
 object DateUtils {
     fun formatMeetingDate(date: Date?): String {
-        if (date == null) return "No date received"
+        if (date == null) return ""
 
         val formatter = SimpleDateFormat("EEE, dd MMM - h:mm a", Locale.getDefault())
         return formatter.format(date)

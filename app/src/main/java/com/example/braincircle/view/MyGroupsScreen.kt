@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,14 +37,16 @@ fun MyGroupsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     MyGroupsStateless(
         modifier = modifier,
-        uiState = uiState
+        uiState = uiState,
+        getLastMessageSent = viewModel::getLastMessageSent
     )
 }
 
 @Composable
 fun MyGroupsStateless(
     modifier: Modifier = Modifier,
-    uiState: MyGroupsUiState
+    uiState: MyGroupsUiState,
+    getLastMessageSent: (String) -> Unit
 ) {
     if (uiState.isLoading) {
         Box(
@@ -69,8 +71,12 @@ fun MyGroupsStateless(
             modifier = modifier.fillMaxSize()
         ) {
             items(uiState.myGroups) { group ->
+                getLastMessageSent(group.groupId)
+
                 MyGroupElement(
                     modifier = Modifier.padding(4.dp),
+                    senderName = uiState.messageSenderName,
+                    lastMessageSent = uiState.lastMessageSent,
                     group = group
                 )
             }
@@ -81,6 +87,8 @@ fun MyGroupsStateless(
 @Composable
 fun MyGroupElement(
     modifier: Modifier = Modifier,
+    senderName: String,
+    lastMessageSent: String,
     group: StudyGroup
 ) {
     Card(
@@ -116,27 +124,28 @@ fun MyGroupElement(
         ) {
             Box(
                 modifier = Modifier.size(width = 300.dp, height = 40.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "Sender Name: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                    text = "$senderName: $lastMessageSent",
+                    textAlign = TextAlign.Start,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
             }
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                shape = CircleShape
-            ) {
-                Text(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    text = "1",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+//            Card(
+//                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+//                shape = CircleShape
+//            ) {
+//                Text(
+//                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+//                    text = "1",
+//                    style = MaterialTheme.typography.labelLarge,
+//                    color = MaterialTheme.colorScheme.onPrimaryContainer
+//                )
+//            }
         }
     }
 }
@@ -148,6 +157,8 @@ fun MyGroupsScreenLightPreview() {
 //        MyGroupElement(group = StudyGroup())
         MyGroupsStateless(
             uiState = MyGroupsUiState(
+                messageSenderName = "Sender name",
+                lastMessageSent = "Last message sent",
                 myGroups = listOf(
                     StudyGroup(name = "Group name"),
                     StudyGroup(name = "Group name"),
@@ -155,7 +166,8 @@ fun MyGroupsScreenLightPreview() {
                     StudyGroup(name = "Group name"),
                     StudyGroup(name = "Group name")
                 )
-            )
+            ),
+            getLastMessageSent = { _ -> }
         )
     }
 }
@@ -167,6 +179,8 @@ fun MyGroupsScreenDarkPreview() {
 //        MyGroupElement(group = StudyGroup())
         MyGroupsStateless(
             uiState = MyGroupsUiState(
+                messageSenderName = "Sender name",
+                lastMessageSent = "Last message sent",
                 myGroups = listOf(
                     StudyGroup(name = "Group name"),
                     StudyGroup(name = "Group name"),
@@ -174,7 +188,8 @@ fun MyGroupsScreenDarkPreview() {
                     StudyGroup(name = "Group name"),
                     StudyGroup(name = "Group name")
                 )
-            )
+            ),
+            getLastMessageSent = { _ -> }
         )
     }
 }

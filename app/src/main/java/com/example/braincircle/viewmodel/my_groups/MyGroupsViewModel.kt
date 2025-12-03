@@ -52,4 +52,27 @@ class MyGroupsViewModel @Inject constructor(
                 }
         }
     }
+
+    fun getLastMessageSent(groupId: String) {
+        viewModelScope.launch {
+            firestore.getLastMessageSent(groupId)
+                .catch { e ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            errorMessage = e.localizedMessage ?: "Error fetching last message sent",
+                            isLoading = false
+                        )
+                    }
+                }
+                .collect { message ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            messageSenderName = message?.senderName ?: "",
+                            lastMessageSent = message?.text ?: "",
+                            isLoading = false
+                        )
+                    }
+                }
+        }
+    }
 }

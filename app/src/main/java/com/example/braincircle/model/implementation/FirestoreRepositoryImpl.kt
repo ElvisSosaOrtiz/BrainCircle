@@ -8,6 +8,7 @@ import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.FirestoreRepository
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
@@ -77,7 +78,7 @@ class FirestoreRepositoryImpl @Inject constructor(
     override suspend fun myStudyGroups(currentUserId: String): Flow<List<StudyGroup>> =
         callbackFlow {
             firestore.collection(STUDY_GROUPS_COLLECTION)
-                .whereEqualTo(StudyGroup::adminId.name, currentUserId)
+                .whereArrayContains(StudyGroup::members.name, currentUserId)
                 .addSnapshotListener { value, error ->
                     if (error != null) {
                         Log.e(TAG, "Error fetching my created study groups", error)
@@ -224,6 +225,26 @@ class FirestoreRepositoryImpl @Inject constructor(
                 }
             awaitClose()
         }
+
+    override suspend fun getLastMessageSent(groupId: String): Flow<ChatMessage?> = callbackFlow {
+        firestore.collection(MESSAGES_COLLECTION)
+            .whereEqualTo(ChatMessage::groupId.name, groupId)
+            .orderBy(ChatMessage::timestamp.name, Query.Direction.ASCENDING)
+            .limit(1)
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    Log.e(TAG, "Error fetching last message", error)
+                    return@addSnapshotListener
+                }
+
+                if (value != null) {
+                    trySend(value.toObjects<ChatMessage>().firstOrNull())
+                } else {
+                    trySend(null)
+                }
+            }
+        awaitClose()
+    }
 
     override suspend fun getUserProfile(userId: String): Flow<User?> = callbackFlow {
         firestore.collection(USERS_COLLECTION)

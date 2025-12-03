@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.create_group
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.data.StudyGroup
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,6 +26,54 @@ class CreateGroupViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CreateGroupUiState())
     val uiState: StateFlow<CreateGroupUiState> = _uiState.asStateFlow()
 
+    fun onNameChange(name: String) {
+        _uiState.update { currentState ->
+            currentState.copy(name = name)
+        }
+    }
+
+    fun onCourseCodeChange(courseCode: String) {
+        _uiState.update { currentState ->
+            currentState.copy(courseCode = courseCode)
+        }
+    }
+
+    fun onCourseTitleChange(courseTitle: String) {
+        _uiState.update { currentState ->
+            currentState.copy(courseTitle = courseTitle)
+        }
+    }
+
+    fun onCourseDeptChange(courseDept: String) {
+        _uiState.update { currentState ->
+            currentState.copy(courseDept = courseDept)
+        }
+    }
+
+    fun onDescriptionChange(description: String) {
+        _uiState.update { currentState ->
+            currentState.copy(description = description)
+        }
+    }
+
+    fun onLocationNameChange(locationName: String) {
+        _uiState.update { currentState ->
+            currentState.copy(locationName = locationName)
+        }
+    }
+
+    fun onLocationLinkChange(locationLink: String) {
+        _uiState.update { currentState ->
+            currentState.copy(locationLink = Uri.parse(locationLink))
+        }
+    }
+
+    fun onMeetingDateChange(meetingDate: Date) {
+        _uiState.update { currentState ->
+            currentState.copy(meetingDate = meetingDate)
+        }
+    }
+
     fun createGroup(navToMyGroups: () -> Unit) {
         _uiState.update { currentState ->
             currentState.copy(
@@ -33,14 +83,18 @@ class CreateGroupViewModel @Inject constructor(
         }
         viewModelScope.launch {
             uiState.value.apply {
+                val uid = auth.currentUser()!!.uid
                 val studyGroup = StudyGroup(
-                    adminId = auth.currentUser()!!.uid,
+                    adminId = uid,
                     name = name,
                     courseCode = courseCode,
                     courseTitle = courseTitle,
                     courseDept = courseDept,
                     description = description,
-                    locationName = meetingDetails,
+                    locationName = locationName,
+                    locationLink = locationLink.toString(),
+                    meetingDate = meetingDate,
+                    members = listOf(uid)
                 )
                 firestore.createStudyGroup(studyGroup)
                     .catch { e ->
@@ -68,6 +122,15 @@ class CreateGroupViewModel @Inject constructor(
                         }
                     }
             }
+        }
+    }
+
+    fun clearMessages() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                errorMessage = "",
+                isLoading = false
+            )
         }
     }
 }

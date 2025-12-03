@@ -94,8 +94,9 @@ enum class BrainCircleScreen(@param:StringRes val title: Int) {
     SignUp(title = R.string.sign_up_title),
     ResetPassword(title = R.string.reset_password_title),
     FindGroups(title = R.string.app_name),
-    MyGroups(title = R.string.my_groups),
-    GroupDetails(title = R.string.group_details)
+    MyGroups(title = R.string.my_groups_title),
+    GroupDetails(title = R.string.group_details_title),
+    CreateGroupScreen(title = R.string.create_group_screen_title)
 }
 
 @Composable
@@ -290,12 +291,12 @@ fun NavigationDrawerContent(
                 onClick = onFindGroupsItemClick
             )
             NavigationDrawerItem(
-                label = { Text(text = stringResource(R.string.my_groups)) },
+                label = { Text(text = stringResource(R.string.my_groups_title)) },
                 selected = currentScreen == BrainCircleScreen.MyGroups,
                 icon = {
                     Icon(
                         imageVector = Icons.Filled.Groups,
-                        contentDescription = stringResource(R.string.my_groups)
+                        contentDescription = stringResource(R.string.my_groups_title)
                     )
                 },
                 onClick = onMyGroupsItemClick
@@ -347,7 +348,6 @@ fun NavigationDrawerContent(
     }
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun BrainCircleApp(
     modifier: Modifier = Modifier,
@@ -359,7 +359,7 @@ fun BrainCircleApp(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val currentScreen = BrainCircleScreen.valueOf(
-        backStackEntry?.destination?.route ?: BrainCircleScreen.SignIn.name
+        backStackEntry?.destination?.route?.substringBefore("/") ?: BrainCircleScreen.SignIn.name
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -392,8 +392,8 @@ fun BrainCircleApp(
         }
         composable(route = BrainCircleScreen.SignUp.name) {
             SignUpScreen(
-                onCreateAccountClick = {
-                    viewModel.reloadUser()
+                onCreateAccountClick = { username, photo ->
+                    viewModel.updateProfileState(username, photo)
                     navigateToFindGroups()
                 },
                 onBackToSignInClick = {
@@ -473,8 +473,9 @@ fun BrainCircleApp(
                             }
                         )
                     }
-                ) {
+                ) { paddingValues ->
                     FindGroupsScreen(
+                        modifier = Modifier.padding(paddingValues),
                         onGroupClick = { groupId, groupName ->
                             navController.navigate("${BrainCircleScreen.GroupDetails.name}/$groupId/$groupName")
                         }
@@ -527,7 +528,7 @@ fun BrainCircleApp(
                     floatingActionButton = {
                         FloatingActionButton(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            onClick = {}
+                            onClick = { navController.navigate(BrainCircleScreen.CreateGroupScreen.name) }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
@@ -536,8 +537,8 @@ fun BrainCircleApp(
                             )
                         }
                     }
-                ) {
-                    MyGroupsScreen()
+                ) { paddingValues ->
+                    MyGroupsScreen(modifier = Modifier.padding(paddingValues))
                 }
             }
         }
@@ -566,9 +567,29 @@ fun BrainCircleApp(
                         }
                     )
                 }
-            ) {
-                GroupDetailsScreen()
+            ) { paddingValues ->
+                GroupDetailsScreen(modifier = Modifier.padding(paddingValues))
             }
+        }
+        composable(route = BrainCircleScreen.CreateGroupScreen.name) {
+            CreateGroupScreen(
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
+                    )
+                },
+                navToMyGroups = {
+                    navController.navigate(BrainCircleScreen.MyGroups.name) {
+                        popUpTo(BrainCircleScreen.CreateGroupScreen.name) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
     }
 }
@@ -579,8 +600,7 @@ fun BrainCircleAppPreview() {
     BrainCircleTheme {
         NavigationDrawerContent(
             uiState = BrainCircleUiState(username = "Elvis Sosa"),
-            currentScreen = BrainCircleScreen.FindGroups,
-            onSignOutNavDrawerItemClick = { }
-        ) { }
+            currentScreen = BrainCircleScreen.FindGroups
+        )
     }
 }

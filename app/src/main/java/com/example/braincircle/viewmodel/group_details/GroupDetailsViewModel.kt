@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.group_details
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -59,7 +60,7 @@ class GroupDetailsViewModel @Inject constructor(
                                 courseDept = group.courseDept,
                                 description = group.description,
                                 locationName = group.locationName,
-                                locationLink = group.locationLink,
+                                locationLink = Uri.parse(group.locationLink),
                                 meetingDate = group.meetingDate,
                                 isAdmin = group.adminId == auth.currentUser()!!.uid,
                                 isLoading = false,

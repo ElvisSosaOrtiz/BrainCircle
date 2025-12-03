@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.brain_circle
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.service.AuthRepository
@@ -27,13 +28,26 @@ class BrainCircleViewModel @Inject constructor(
         viewModelScope.launch {
             auth.getAuthStateFlow().collect { user ->
                 _uiState.update { currentState ->
+
+                    val newName = user?.displayName ?: currentState.username
+                    val newPhoto = user?.photoUrl?.toString() ?: currentState.photoUrl
+
                     currentState.copy(
-                        username = user?.displayName,
-                        photoUrl = user?.photoUrl?.toString(),
+                        username = newName,
+                        photoUrl = newPhoto,
                         isUserSignedIn = (user != null)
                     )
                 }
             }
+        }
+    }
+
+    fun updateProfileState(username: String, photo: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                username = username,
+                photoUrl = photo
+            )
         }
     }
 
