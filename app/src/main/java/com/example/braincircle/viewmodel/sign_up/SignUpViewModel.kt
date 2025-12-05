@@ -116,13 +116,7 @@ class SignUpViewModel @Inject constructor(
                 }
                 .collect { response ->
                     if (response != null) {
-                        val user = User(
-                            uid = response.uid,
-                            name = response.displayName!!,
-                            email = response.email!!,
-                            photoUri = response.photoUrl
-                        )
-                        createUserDocument(user, navigateToFindGroups)
+                        navigateToFindGroups()
                     } else {
                         _uiState.update { currentState ->
                             currentState.copy(

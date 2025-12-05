@@ -109,7 +109,7 @@ fun GroupCard(
                 Text(
                     text = group.name,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.inversePrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)

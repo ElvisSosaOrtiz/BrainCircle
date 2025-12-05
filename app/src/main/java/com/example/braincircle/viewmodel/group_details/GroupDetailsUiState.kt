@@ -14,6 +14,7 @@ data class GroupDetailsUiState(
     val locationLink: Uri = Uri.EMPTY,
     val meetingDate: Date? = null,
     val isAdmin: Boolean = false,
+    val isInGroup: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String = ""
 )

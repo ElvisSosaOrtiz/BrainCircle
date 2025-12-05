@@ -1,5 +1,6 @@
 package com.example.braincircle.viewmodel.chat_room
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.braincircle.model.data.ChatMessage
@@ -17,17 +18,20 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatRoomViewModel @Inject constructor(
     val firestore: FirestoreRepository,
-    val auth: AuthRepository
+    val auth: AuthRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val groupId: String = checkNotNull(savedStateHandle["groupId"])
 
     private val _uiState = MutableStateFlow(ChatRoomUiState())
     val uiState: StateFlow<ChatRoomUiState> = _uiState.asStateFlow()
 
     init {
-        getChatMessages()
+        getChatMessages(groupId)
     }
 
-    private fun getChatMessages() {
+    private fun getChatMessages(id: String) {
         _uiState.update { currentState ->
             currentState.copy(
                 errorMessage = "",
@@ -35,7 +39,7 @@ class ChatRoomViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            firestore.getChatMessages(_uiState.value.groupId)
+            firestore.getChatMessages(id)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -47,6 +51,7 @@ class ChatRoomViewModel @Inject constructor(
                 .collect { messages ->
                     _uiState.update { currentState ->
                         currentState.copy(
+                            senderId = auth.currentUser()!!.uid,
                             messages = messages,
                             isLoading = false
                         )
@@ -71,9 +76,10 @@ class ChatRoomViewModel @Inject constructor(
         viewModelScope.launch {
             uiState.value.apply {
                 val chatMessage = ChatMessage(
-                    groupId = groupId,
+                    groupId = this@ChatRoomViewModel.groupId,
                     senderId = auth.currentUser()!!.uid,
                     senderName = auth.currentUser()!!.displayName!!,
+                    senderPhotoUri = auth.currentUser()!!.photoUrl.toString(),
                     text = message
                 )
                 firestore.sendMessage(groupId, chatMessage)

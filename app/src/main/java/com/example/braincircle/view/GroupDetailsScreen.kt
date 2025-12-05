@@ -9,20 +9,28 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.GroupOff
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -37,6 +45,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.braincircle.model.utils.DateUtils
 import com.example.braincircle.ui.theme.BrainCircleTheme
+import com.example.braincircle.view.common.ConfirmationModal
 import com.example.braincircle.viewmodel.group_details.GroupDetailsUiState
 import com.example.braincircle.viewmodel.group_details.GroupDetailsViewModel
 import java.util.Date
@@ -44,20 +53,37 @@ import java.util.Date
 @Composable
 fun GroupDetailsScreen(
     modifier: Modifier = Modifier,
-    viewModel: GroupDetailsViewModel = hiltViewModel()
+    viewModel: GroupDetailsViewModel = hiltViewModel(),
+    navToMyGroups: () -> Unit,
+    navToManageGroup: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     GroupDetailsScreenStateless(
         modifier = modifier,
-        uiState = uiState
+        uiState = uiState,
+        navToMyGroups = navToMyGroups,
+        navToManageGroup = navToManageGroup,
+        joinGroup = viewModel::joinGroup,
+        leaveGroup = viewModel::leaveGroup,
+        removeGroup = viewModel::removeGroup
     )
 }
 
 @Composable
 private fun GroupDetailsScreenStateless(
     modifier: Modifier = Modifier,
-    uiState: GroupDetailsUiState
+    uiState: GroupDetailsUiState,
+    navToMyGroups: () -> Unit = {},
+    navToManageGroup: () -> Unit = {},
+    joinGroup: (() -> Unit) -> Unit = {},
+    leaveGroup: (() -> Unit) -> Unit = {},
+    removeGroup: (() -> Unit) -> Unit = {}
 ) {
+    var showConfirmationModal by remember { mutableStateOf(false) }
+    var modalTitle by remember { mutableStateOf("") }
+    var modalMessage by remember { mutableStateOf("") }
+    var modalConfirmEvent by remember { mutableStateOf<(() -> Unit) -> Unit>({}) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -190,6 +216,63 @@ private fun GroupDetailsScreenStateless(
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
+        if (uiState.isAdmin) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                FilledIconButton(
+                    onClick = {
+                        modalTitle = "Remove group?"
+                        modalMessage = "Are you sure you want to remove this group?"
+                        modalConfirmEvent = removeGroup
+                        showConfirmationModal = true
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
+                }
+                Spacer(Modifier.padding(horizontal = 8.dp))
+                FilledIconButton(
+                    onClick = navToManageGroup,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                ) {
+                    Icon(imageVector = Icons.Filled.Edit, contentDescription = null)
+                }
+            }
+        } else {
+            if (uiState.isInGroup) {
+                FilledIconButton(
+                    onClick = {
+                        modalTitle = "Leave group?"
+                        modalMessage = "Are you sure you want to leave this group?"
+                        modalConfirmEvent = leaveGroup
+                        showConfirmationModal = true
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(imageVector = Icons.Filled.GroupOff, contentDescription = null)
+                }
+            } else {
+                FilledIconButton(
+                    onClick = { joinGroup(navToMyGroups) },
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(imageVector = Icons.Filled.Group, contentDescription = null)
+                }
+            }
+        }
+
+        if (showConfirmationModal) {
+            ConfirmationModal(
+                title = modalTitle,
+                message = modalMessage,
+                onDismiss = { showConfirmationModal = false },
+                onConfirm = { modalConfirmEvent(navToMyGroups) }
+            )
+        }
     }
 }
 
@@ -199,12 +282,14 @@ fun GroupDetailsScreenLightPreview() {
     BrainCircleTheme {
         GroupDetailsScreenStateless(
             uiState = GroupDetailsUiState(
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
                 courseCode = "CODE-123",
                 courseTitle = "Course Title",
                 courseDept = "Course Department",
+                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
                 locationName = "Location of meeting or class",
-                meetingDate = Date()
+                meetingDate = Date(),
+                isAdmin = true,
+                isInGroup = false
             )
         )
     }
@@ -216,12 +301,14 @@ fun GroupDetailsScreenDarkPreview() {
     BrainCircleTheme(darkTheme = true) {
         GroupDetailsScreenStateless(
             uiState = GroupDetailsUiState(
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
                 courseCode = "CODE-123",
                 courseTitle = "Course Title",
                 courseDept = "Course Department",
+                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
                 locationName = "Location of meeting or class",
-                meetingDate = Date()
+                meetingDate = Date(),
+                isAdmin = true,
+                isInGroup = false
             )
         )
     }

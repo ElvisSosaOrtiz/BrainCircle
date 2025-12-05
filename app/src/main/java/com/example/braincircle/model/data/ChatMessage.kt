@@ -11,6 +11,7 @@ import java.util.Date
  * @param groupId Identifier of the group the message belongs to.
  * @param senderId Identifier of the sender.
  * @param senderName Name of the sender.
+ * @param senderPhotoUri Photo URI of the sender.
  * @param text Text content of the message.
  * @param timestamp Timestamp indicating when the message was sent.
  */
@@ -19,6 +20,7 @@ data class ChatMessage(
     val groupId: String = "",
     val senderId: String = "",
     val senderName: String = "",
+    val senderPhotoUri: String = "",
     val text: String = "",
     @ServerTimestamp val timestamp: Date? = null
 )

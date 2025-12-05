@@ -7,6 +7,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import com.example.braincircle.R
+import com.example.braincircle.model.data.User
 import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -20,6 +21,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
 import javax.inject.Inject
@@ -39,7 +41,8 @@ class AuthRepositoryImpl @Inject constructor(
                 } else {
                     trySend(
                         RepositoryResponse.Error(
-                            message = task.exception?.localizedMessage ?: "Unknown error while signing in"
+                            message = task.exception?.localizedMessage
+                                ?: "Unknown error while signing in"
                         )
                     )
                 }
@@ -83,6 +86,37 @@ class AuthRepositoryImpl @Inject constructor(
                 }
             }
         awaitClose()
+    }
+
+    override suspend fun updateUserProfile(
+        username: String,
+        photoUri: Uri?
+    ): Flow<User?> = callbackFlow {
+        val user = auth.currentUser
+        val profileUpdate = UserProfileChangeRequest.Builder()
+            .setDisplayName(username)
+            .setPhotoUri(photoUri)
+            .build()
+        user?.updateProfile(profileUpdate)
+            ?.addOnCompleteListener { updateUserTask ->
+                if (updateUserTask.isSuccessful) {
+                    trySend(
+                        User(
+                            uid = user.uid,
+                            name = user.displayName!!,
+                            email = user.email!!,
+                            photoUri = user.photoUrl
+                        )
+                    )
+                } else {
+                    Log.e(
+                        "AuthRepositoryImpl",
+                        updateUserTask.exception?.localizedMessage
+                            ?: "Unknown error while updating user profile"
+                    )
+                    trySend(null)
+                }
+            }
     }
 
     override suspend fun signInWithGoogle(@ApplicationContext context: Context): Flow<RepositoryResponse> =
@@ -179,15 +213,19 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun reloadUser(): Flow<FirebaseUser?> = callbackFlow {
-        auth.currentUser?.reload()?.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                trySend(auth.currentUser)
-            } else {
-                trySend(null)
-            }
-        }
-        awaitClose()
+    override suspend fun reloadUser(): FirebaseUser? {
+        auth.currentUser?.reload()?.await()
+        return auth.currentUser
+
+//    override suspend fun getAuthStateFlow(): Flow<FirebaseUser?> = callbackFlow {
+//        auth.currentUser?.reload()?.addOnCompleteListener { task ->
+//            if (task.isSuccessful) {
+//                trySend(auth.currentUser)
+//            } else {
+//                trySend(null)
+//            }
+//        }
+//        awaitClose()
     }
 
     override fun signOut() = auth.signOut()

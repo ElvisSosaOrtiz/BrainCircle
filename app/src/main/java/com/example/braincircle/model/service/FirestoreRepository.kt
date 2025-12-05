@@ -20,4 +20,5 @@ interface FirestoreRepository {
     suspend fun updateUserProfile(user: User): Flow<RepositoryResponse>
     suspend fun leaveStudyGroup(studentId: String, groupId: String): Flow<RepositoryResponse>
     suspend fun getLastMessageSent(groupId: String): Flow<ChatMessage?>
+    suspend fun joinStudyGroup(studentId: String, groupId: String): Flow<RepositoryResponse>
 }

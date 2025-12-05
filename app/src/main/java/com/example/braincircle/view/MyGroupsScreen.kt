@@ -1,5 +1,7 @@
 package com.example.braincircle.view
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,13 +34,15 @@ import com.example.braincircle.viewmodel.my_groups.MyGroupsViewModel
 @Composable
 fun MyGroupsScreen(
     modifier: Modifier = Modifier,
-    viewModel: MyGroupsViewModel = hiltViewModel()
+    viewModel: MyGroupsViewModel = hiltViewModel(),
+    navToChatRoom: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     MyGroupsStateless(
         modifier = modifier,
         uiState = uiState,
-        getLastMessageSent = viewModel::getLastMessageSent
+        getLastMessageSent = viewModel::getLastMessageSent,
+        navToChatRoom = navToChatRoom
     )
 }
 
@@ -46,7 +50,8 @@ fun MyGroupsScreen(
 fun MyGroupsStateless(
     modifier: Modifier = Modifier,
     uiState: MyGroupsUiState,
-    getLastMessageSent: (String) -> Unit
+    getLastMessageSent: (String) -> Unit = {},
+    navToChatRoom: (String, String) -> Unit = { _, _ -> },
 ) {
     if (uiState.isLoading) {
         Box(
@@ -73,10 +78,19 @@ fun MyGroupsStateless(
             items(uiState.myGroups) { group ->
                 getLastMessageSent(group.groupId)
 
+                val senderName = uiState.messageSenderName
+                val lastMessageSent = uiState.lastMessageSent
+                val lastMessageSentTime = uiState.lastMessageSentTime
+                val isCurrentUser = uiState.isCurrentUser
+
                 MyGroupElement(
-                    modifier = Modifier.padding(4.dp),
-                    senderName = uiState.messageSenderName,
-                    lastMessageSent = uiState.lastMessageSent,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .clickable { navToChatRoom(group.groupId, group.name) },
+                    senderName = senderName,
+                    lastMessageSent = lastMessageSent,
+                    lastMessageSentTime = lastMessageSentTime,
+                    isCurrentUser = isCurrentUser,
                     group = group
                 )
             }
@@ -89,8 +103,17 @@ fun MyGroupElement(
     modifier: Modifier = Modifier,
     senderName: String,
     lastMessageSent: String,
+    lastMessageSentTime: String,
+    isCurrentUser: Boolean,
     group: StudyGroup
 ) {
+    Log.d("MyGroupsStateless", "Sender name: $senderName")
+    Log.d("MyGroupsStateless", "Last message sent: $lastMessageSent")
+    Log.d("MyGroupsStateless", "Last message sent time: $lastMessageSentTime")
+    Log.d("MyGroupsStateless", "Is current user: $isCurrentUser")
+
+    val dynamicSenderName = if (isCurrentUser) "You" else senderName
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
@@ -109,7 +132,7 @@ fun MyGroupElement(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "00:00",
+                text = lastMessageSentTime.ifEmpty { "" },
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -127,7 +150,7 @@ fun MyGroupElement(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "$senderName: $lastMessageSent",
+                    text = if (lastMessageSent.isEmpty()) "No messages" else "$dynamicSenderName: $lastMessageSent",
                     textAlign = TextAlign.Start,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,

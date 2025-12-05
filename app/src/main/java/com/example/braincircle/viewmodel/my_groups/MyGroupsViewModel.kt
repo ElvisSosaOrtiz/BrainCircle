@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -69,6 +71,8 @@ class MyGroupsViewModel @Inject constructor(
                         currentState.copy(
                             messageSenderName = message?.senderName ?: "",
                             lastMessageSent = message?.text ?: "",
+                            lastMessageSentTime = SimpleDateFormat("HH:mm").format(message?.timestamp ?: Date()),
+                            isCurrentUser = auth.currentUser()!!.uid == message?.senderId,
                             isLoading = false
                         )
                     }

@@ -163,21 +163,71 @@ class FirestoreRepositoryImpl @Inject constructor(
             awaitClose()
         }
 
+    override suspend fun joinStudyGroup(
+        studentId: String,
+        groupId: String
+    ): Flow<RepositoryResponse> = callbackFlow {
+        firestore.collection(STUDY_GROUPS_COLLECTION)
+            .document(groupId)
+            .update(StudyGroup::members.name, FieldValue.arrayUnion(studentId))
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    firestore.collection(USERS_COLLECTION)
+                        .document(studentId)
+                        .update(User::myGroups.name, FieldValue.arrayUnion(groupId))
+                        .addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                trySend(RepositoryResponse.Success)
+                            } else {
+                                trySend(
+                                    RepositoryResponse.Error(
+                                        message = updateTask.exception?.localizedMessage
+                                            ?: "Unknown error while adding group id to user's groups array"
+                                    )
+                                )
+                            }
+                        }
+                } else {
+                    trySend(
+                        RepositoryResponse.Error(
+                            message = task.exception?.localizedMessage
+                                ?: "Unknown error while joining group"
+                        )
+                    )
+                }
+            }
+        awaitClose()
+    }
+
     override suspend fun leaveStudyGroup(
         studentId: String,
         groupId: String
     ): Flow<RepositoryResponse> =
         callbackFlow {
-            firestore.collection(USERS_COLLECTION)
-                .document(studentId)
-                .update(User::myGroups.name, FieldValue.arrayRemove(groupId))
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        trySend(RepositoryResponse.Success)
+            firestore.collection(STUDY_GROUPS_COLLECTION)
+                .document(groupId)
+                .update(StudyGroup::members.name, FieldValue.arrayRemove(studentId))
+                .addOnCompleteListener { groupTask ->
+                    if (groupTask.isSuccessful) {
+                        firestore.collection(USERS_COLLECTION)
+                            .document(studentId)
+                            .update(User::myGroups.name, FieldValue.arrayRemove(groupId))
+                            .addOnCompleteListener { userTask ->
+                                if (userTask.isSuccessful) {
+                                    trySend(RepositoryResponse.Success)
+                                } else {
+                                    trySend(
+                                        RepositoryResponse.Error(
+                                            message = userTask.exception?.localizedMessage
+                                                ?: "Unknown error while leaving group"
+                                        )
+                                    )
+                                }
+                            }
                     } else {
                         trySend(
                             RepositoryResponse.Error(
-                                message = task.exception?.localizedMessage
+                                message = groupTask.exception?.localizedMessage
                                     ?: "Unknown error while leaving group"
                             )
                         )
@@ -229,7 +279,7 @@ class FirestoreRepositoryImpl @Inject constructor(
     override suspend fun getLastMessageSent(groupId: String): Flow<ChatMessage?> = callbackFlow {
         firestore.collection(MESSAGES_COLLECTION)
             .whereEqualTo(ChatMessage::groupId.name, groupId)
-            .orderBy(ChatMessage::timestamp.name, Query.Direction.ASCENDING)
+            .orderBy(ChatMessage::timestamp.name, Query.Direction.DESCENDING)
             .limit(1)
             .addSnapshotListener { value, error ->
                 if (error != null) {

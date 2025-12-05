@@ -20,5 +20,6 @@ data class User(
     val photoUri: Uri? = Uri.EMPTY,
     val major: String = "",
     val availabilityNotes: String = "",
-    val myGroups: List<String> = emptyList()
+    val myGroups: List<String> = emptyList(),
+    val fcmToken: String? = null
 )

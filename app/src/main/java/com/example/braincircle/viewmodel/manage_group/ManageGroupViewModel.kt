@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -79,7 +80,55 @@ class ManageGroupViewModel @Inject constructor(
         }
     }
 
-    fun updateGroup(navToMyGroups: () -> Unit) {
+    fun onNameChange(name: String) {
+        _uiState.update { currentState ->
+            currentState.copy(name = name)
+        }
+    }
+
+    fun onCourseCodeChange(courseCode: String) {
+        _uiState.update { currentState ->
+            currentState.copy(courseCode = courseCode)
+        }
+    }
+
+    fun onCourseTitleChange(courseTitle: String) {
+        _uiState.update { currentState ->
+            currentState.copy(courseTitle = courseTitle)
+        }
+    }
+
+    fun onCourseDeptChange(courseDept: String) {
+        _uiState.update { currentState ->
+            currentState.copy(courseDept = courseDept)
+        }
+    }
+
+    fun onDescriptionChange(description: String) {
+        _uiState.update { currentState ->
+            currentState.copy(description = description)
+        }
+    }
+
+    fun onLocationNameChange(locationName: String) {
+        _uiState.update { currentState ->
+            currentState.copy(locationName = locationName)
+        }
+    }
+
+    fun onLocationLinkChange(locationLink: String) {
+        _uiState.update { currentState ->
+            currentState.copy(locationLink = Uri.parse(locationLink))
+        }
+    }
+
+    fun onMeetingDateChange(meetingDate: Date) {
+        _uiState.update { currentState ->
+            currentState.copy(meetingDate = meetingDate)
+        }
+    }
+
+    fun updateGroup(navToGroupDetails: (String) -> Unit) {
         _uiState.update { currentState ->
             currentState.copy(
                 errorMessage = "",
@@ -112,7 +161,7 @@ class ManageGroupViewModel @Inject constructor(
                         .collect { response ->
                             when (response) {
                                 is RepositoryResponse.Success -> {
-                                    navToMyGroups()
+                                    navToGroupDetails(_uiState.value.name)
                                 }
 
                                 is RepositoryResponse.Error -> {
@@ -137,7 +186,7 @@ class ManageGroupViewModel @Inject constructor(
         }
     }
 
-    fun removeGroup(navToMyGroups: () -> Unit) {
+    fun removeGroup(navToGroupDetails: (String) -> Unit) {
         _uiState.update { currentState ->
             currentState.copy(
                 errorMessage = "",
@@ -158,7 +207,7 @@ class ManageGroupViewModel @Inject constructor(
                     .collect { response ->
                         when (response) {
                             is RepositoryResponse.Success -> {
-                                navToMyGroups()
+                                navToGroupDetails(_uiState.value.name)
                             }
 
                             is RepositoryResponse.Error -> {
@@ -179,6 +228,15 @@ class ManageGroupViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    fun clearMessages() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                errorMessage = "",
+                isLoading = false
+            )
         }
     }
 }

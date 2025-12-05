@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 @HiltViewModel
 class GroupDetailsViewModel @Inject constructor(
@@ -60,9 +61,10 @@ class GroupDetailsViewModel @Inject constructor(
                                 courseDept = group.courseDept,
                                 description = group.description,
                                 locationName = group.locationName,
-                                locationLink = Uri.parse(group.locationLink),
+                                locationLink = group.locationLink.toUri(),
                                 meetingDate = group.meetingDate,
                                 isAdmin = group.adminId == auth.currentUser()!!.uid,
+                                isInGroup = group.members.contains(auth.currentUser()!!.uid),
                                 isLoading = false,
                             )
                         }
@@ -72,6 +74,48 @@ class GroupDetailsViewModel @Inject constructor(
                                 errorMessage = "Group not found",
                                 isLoading = false
                             )
+                        }
+                    }
+                }
+        }
+    }
+
+    fun joinGroup(navToMyGroups: () -> Unit) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                errorMessage = "",
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            firestore.joinStudyGroup(auth.currentUser()!!.uid, _uiState.value.groupId)
+                .catch { e ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            errorMessage = e.localizedMessage ?: "Error joining group",
+                            isLoading = false
+                        )
+                    }
+                }
+                .collect { response ->
+                    when (response) {
+                        is RepositoryResponse.Success -> {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    isInGroup = true,
+                                    isLoading = false
+                                )
+                            }
+                            navToMyGroups()
+                        }
+
+                        is RepositoryResponse.Error -> {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    errorMessage = response.message,
+                                    isLoading = false
+                                )
+                            }
                         }
                     }
                 }
@@ -98,6 +142,12 @@ class GroupDetailsViewModel @Inject constructor(
                 .collect { response ->
                     when (response) {
                         is RepositoryResponse.Success -> {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    isInGroup = false,
+                                    isLoading = false
+                                )
+                            }
                             navToMyGroups()
                         }
 

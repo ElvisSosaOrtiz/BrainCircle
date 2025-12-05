@@ -8,9 +8,10 @@ data class ChatRoomUiState(
     val groupId: String = "",
     val messages: List<ChatMessage> = emptyList(),
     val message: String = "",
+    val senderId: String = "",
     val senderName: String = "",
-    val senderPhotoUri: Uri = Uri.EMPTY,
-    val messageTimestamp: Date? = null,
+    val messageTimestamp: String = "",
+    val isCurrentUserSender: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String = ""
 )

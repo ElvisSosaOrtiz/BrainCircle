@@ -8,10 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedButton
@@ -21,10 +18,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,12 +35,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.braincircle.model.utils.DateUtils
 import com.example.braincircle.ui.theme.BrainCircleTheme
+import com.example.braincircle.view.common.SequentialDateTimePicker
 import com.example.braincircle.viewmodel.create_group.CreateGroupUiState
 import com.example.braincircle.viewmodel.create_group.CreateGroupViewModel
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import java.util.Date
-import java.util.TimeZone
 
 @Composable
 fun CreateGroupScreen(
@@ -118,7 +110,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.name,
             onValueChange = { onNameChange(it) },
             label = { Text(text = "Group name") },
@@ -130,7 +123,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.courseTitle,
             onValueChange = { onCourseTitleChange(it) },
             label = { Text(text = "Course title") },
@@ -142,7 +136,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.courseCode,
             onValueChange = { onCourseCodeChange(it) },
             label = { Text(text = "Course code") },
@@ -154,7 +149,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.courseDept,
             onValueChange = { onCourseDeptChange(it) },
             label = { Text(text = "Course department") },
@@ -166,7 +162,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.description,
             onValueChange = { onDescriptionChange(it) },
             label = { Text(text = "Description") },
@@ -178,7 +175,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.locationName,
             onValueChange = { onLocationNameChange(it) },
             label = { Text(text = "Location name") },
@@ -190,7 +188,8 @@ fun CreateGroupScreenStateless(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 8.dp),
             value = uiState.locationLink.toString(),
             onValueChange = { onLocationLinkChange(it) },
             label = { Text(text = "Location link") },
@@ -238,81 +237,6 @@ fun CreateGroupScreenStateless(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SequentialDateTimePicker(
-    show: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (Date) -> Unit
-) {
-    var showDateDialog by remember { mutableStateOf(true) }
-    var showTimeDialog by remember { mutableStateOf(false) }
-
-    val dateState = rememberDatePickerState()
-    val timeState = rememberTimePickerState()
-
-    LaunchedEffect(show) {
-        if (show) {
-            showDateDialog = true
-            showTimeDialog = false
-        }
-    }
-
-    if (show) {
-        if (showDateDialog) {
-            DatePickerDialog(
-                onDismissRequest = onDismiss,
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            if (dateState.selectedDateMillis != null) {
-                                showDateDialog = false
-                                showTimeDialog = true
-                            }
-                        }
-                    ) {
-                        Text(text = "Next")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismiss) { Text(text = "Cancel") }
-                }
-            ) {
-                DatePicker(state = dateState)
-            }
-        }
-
-        if (showTimeDialog) {
-            AlertDialog(
-                onDismissRequest = onDismiss,
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val selectedDateMillis = dateState.selectedDateMillis
-                            if (selectedDateMillis != null) {
-                                val resultDate = combineDateAndTime(
-                                    dateMillis = selectedDateMillis,
-                                    hour = timeState.hour,
-                                    minute = timeState.minute
-                                )
-                                onConfirm(resultDate)
-                            }
-                        }
-                    ) {
-                        Text(text = "Confirm")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismiss) { Text(text = "Cancel") }
-                },
-                text = {
-                    TimePicker(state = timeState)
-                }
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFFF7FBF1)
 @Composable
 fun CreateGroupScreenLightPreview() {
@@ -349,18 +273,4 @@ fun CreateGroupScreenDarkPreview() {
             onCreateGroupClick = {}
         )
     }
-}
-
-private fun combineDateAndTime(dateMillis: Long, hour: Int, minute: Int): Date {
-    val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-    calendar.timeInMillis = dateMillis
-
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH)
-    val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-    val localCalendar = Calendar.getInstance()
-    localCalendar.set(year, month, day, hour, minute, 0)
-
-    return localCalendar.time
 }

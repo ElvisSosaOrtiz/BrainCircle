@@ -2,6 +2,7 @@ package com.example.braincircle.model.service
 
 import android.content.Context
 import android.net.Uri
+import com.example.braincircle.model.data.User
 import com.example.braincircle.model.response.RepositoryResponse
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,5 +22,6 @@ interface AuthRepository {
     fun signOut()
     fun currentUser(): FirebaseUser?
     suspend fun getAuthStateFlow(): Flow<FirebaseUser?>
-    suspend fun reloadUser(): Flow<FirebaseUser?>
+    suspend fun reloadUser(): FirebaseUser?
+    suspend fun updateUserProfile(username: String, photoUri: Uri?): Flow<User?>
 }

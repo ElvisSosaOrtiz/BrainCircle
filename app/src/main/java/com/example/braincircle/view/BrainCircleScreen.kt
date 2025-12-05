@@ -2,14 +2,15 @@
 
 package com.example.braincircle.view
 
-import android.annotation.SuppressLint
+import android.util.Log
 import androidx.annotation.StringRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,11 +31,10 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,11 +43,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -96,7 +96,9 @@ enum class BrainCircleScreen(@param:StringRes val title: Int) {
     FindGroups(title = R.string.app_name),
     MyGroups(title = R.string.my_groups_title),
     GroupDetails(title = R.string.group_details_title),
-    CreateGroupScreen(title = R.string.create_group_screen_title)
+    CreateGroupScreen(title = R.string.create_group_screen_title),
+    ManageGroupScreen(title = R.string.manage_group_screen_title),
+    ChatRoomScreen(title = R.string.chat_room_screen_title)
 }
 
 @Composable
@@ -106,8 +108,10 @@ fun BrainCircleAppBar(
     canNavigateUp: Boolean,
     navigateUp: () -> Unit,
     title: String = "",
+    titleClickable: Boolean = false,
+    isInGroupsListScreen: Boolean = false,
     onNavDrawerClick: () -> Unit = {},
-    isInGroupsListScreen: Boolean = false
+    navToGroupDetails: () -> Unit = {}
 ) {
     var isSearch by remember { mutableStateOf(false) }
     var value by remember { mutableStateOf("") }
@@ -176,7 +180,10 @@ fun BrainCircleAppBar(
         CenterAlignedTopAppBar(
             modifier = modifier,
             title = {
-                Text(stringResource(currentScreen.title, title))
+                Text(
+                    modifier = if (titleClickable) Modifier.clickable(onClick = navToGroupDetails) else Modifier,
+                    text = stringResource(currentScreen.title, title)
+                )
             },
             colors = TopAppBarDefaults.mediumTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -322,25 +329,19 @@ fun NavigationDrawerContent(
         AlertDialog(
             onDismissRequest = { },
             confirmButton = {
-                FilledTonalButton(
+                TextButton(
                     onClick = {
                         onSignOutClick()
                         showSignOutDialog = false
-                    },
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-
-                ) { Text(text = stringResource(R.string.sign_out)) }
+                    }
+                ) {
+                    Text(text = stringResource(R.string.sign_out))
+                }
             },
             dismissButton = {
-                OutlinedButton(
-                    onClick = { showSignOutDialog = false },
-                    border = BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) { Text(text = stringResource(R.string.cancel)) }
+                TextButton(onClick = { showSignOutDialog = false }) {
+                    Text(text = stringResource(R.string.cancel))
+                }
             },
             title = { Text(text = stringResource(R.string.sign_out)) },
             text = { Text(text = stringResource(R.string.sign_out_confirmation_question)) },
@@ -354,19 +355,36 @@ fun BrainCircleApp(
     viewModel: BrainCircleViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController()
 ) {
+    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+
+    if (startDestination == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val currentScreen = BrainCircleScreen.valueOf(
-        backStackEntry?.destination?.route?.substringBefore("/") ?: BrainCircleScreen.SignIn.name
-    )
+    val currentRoute =
+        backStackEntry?.destination?.route?.substringBefore("/") ?: startDestination!!
+    val currentScreen = try {
+        BrainCircleScreen.valueOf(currentRoute)
+    } catch (e: IllegalArgumentException) {
+        Log.e("BrainCircleApp", e.localizedMessage ?: "Unknown error")
+        BrainCircleScreen.valueOf(startDestination!!)
+    }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     NavHost(
         navController = navController,
-        startDestination = if (uiState.isUserSignedIn) BrainCircleScreen.FindGroups.name else BrainCircleScreen.SignIn.name
+        startDestination = startDestination!!
     ) {
         val navigateToFindGroups = {
             navController.navigate(BrainCircleScreen.FindGroups.name) {
@@ -393,8 +411,10 @@ fun BrainCircleApp(
         composable(route = BrainCircleScreen.SignUp.name) {
             SignUpScreen(
                 onCreateAccountClick = { username, photo ->
-                    viewModel.updateProfileState(username, photo)
-                    navigateToFindGroups()
+//                    navigateToFindGroups()
+//                    viewModel.updateUserProfile()
+                    viewModel.reloadUser()
+                    viewModel.createUserDocument(username, photo)
                 },
                 onBackToSignInClick = {
                     navController.navigate(BrainCircleScreen.SignIn.name) {
@@ -538,7 +558,12 @@ fun BrainCircleApp(
                         }
                     }
                 ) { paddingValues ->
-                    MyGroupsScreen(modifier = Modifier.padding(paddingValues))
+                    MyGroupsScreen(
+                        modifier = Modifier.padding(paddingValues),
+                        navToChatRoom = { groupId, groupName ->
+                            navController.navigate("${BrainCircleScreen.ChatRoomScreen.name}/$groupId/$groupName")
+                        }
+                    )
                 }
             }
         }
@@ -549,6 +574,7 @@ fun BrainCircleApp(
                 navArgument("groupName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
             val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
 
             Scaffold(
@@ -568,7 +594,20 @@ fun BrainCircleApp(
                     )
                 }
             ) { paddingValues ->
-                GroupDetailsScreen(modifier = Modifier.padding(paddingValues))
+                GroupDetailsScreen(
+                    modifier = Modifier.padding(paddingValues),
+                    navToManageGroup = {
+                        navController.navigate("${BrainCircleScreen.ManageGroupScreen.name}/$groupId")
+                    },
+                    navToMyGroups = {
+                        navController.navigate(BrainCircleScreen.MyGroups.name) {
+                            popUpTo(BrainCircleScreen.FindGroups.name) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
         }
         composable(route = BrainCircleScreen.CreateGroupScreen.name) {
@@ -590,6 +629,65 @@ fun BrainCircleApp(
                     }
                 }
             )
+        }
+        composable(
+            route = "${BrainCircleScreen.ManageGroupScreen.name}/{groupId}",
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+        ) {
+            val groupId = it.arguments?.getString("groupId") ?: ""
+
+            ManageGroupScreen(
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
+                    )
+                },
+                navToGroupDetails = { groupName ->
+                    navController.navigate("${BrainCircleScreen.GroupDetails.name}/$groupId/$groupName") {
+                        popUpTo(BrainCircleScreen.ManageGroupScreen.name) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable(
+            route = "${BrainCircleScreen.ChatRoomScreen.name}/{groupId}/{groupName}",
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType },
+                navArgument("groupName") { type = NavType.StringType }
+            )
+        ) {
+            val groupId = it.arguments?.getString("groupId") ?: ""
+            val groupName = it.arguments?.getString("groupName") ?: ""
+
+            Scaffold(
+                modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    BrainCircleAppBar(
+                        currentScreen = currentScreen,
+                        canNavigateUp = navController.previousBackStackEntry != null,
+                        navigateUp = { navController.navigateUp() },
+                        title = groupName,
+                        titleClickable = true,
+                        isInGroupsListScreen = currentScreen.name == BrainCircleScreen.FindGroups.name || currentScreen.name == BrainCircleScreen.MyGroups.name,
+                        onNavDrawerClick = {
+                            scope.launch {
+                                drawerState.apply { if (isClosed) open() else close() }
+                            }
+                        },
+                        navToGroupDetails = {
+                            navController.navigate("${BrainCircleScreen.GroupDetails.name}/$groupId/$groupName")
+                        }
+                    )
+                }
+            ) { paddingValues ->
+                ChatRoomScreen(modifier = Modifier.padding(paddingValues))
+            }
         }
     }
 }
