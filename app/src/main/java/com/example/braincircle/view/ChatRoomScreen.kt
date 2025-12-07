@@ -1,5 +1,8 @@
 package com.example.braincircle.view
 
+import android.icu.text.DateFormat
+import android.icu.text.DateFormat.getDateInstance
+import android.icu.text.DateFormat.getTimeInstance
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,21 +34,27 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.braincircle.R
 import com.example.braincircle.model.data.ChatMessage
+import com.example.braincircle.model.utils.DateUtils.getDateIntervalInDays
 import com.example.braincircle.ui.theme.BrainCircleTheme
 import com.example.braincircle.viewmodel.chat_room.ChatRoomUiState
 import com.example.braincircle.viewmodel.chat_room.ChatRoomViewModel
-import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 
 @Composable
@@ -69,6 +79,11 @@ fun ChatRoomScreenStateless(
     onMessageChange: (String) -> Unit = {},
     onSendMessage: () -> Unit = {}
 ) {
+    val currentDateLabelDate = rememberSaveable { mutableStateOf<Date?>(null) }
+    val currentDateLabelNotShowing = rememberSaveable { mutableStateOf(false) }
+
+    val date = Date()
+
     Column(
         modifier = modifier.fillMaxSize()
     ) {
@@ -91,10 +106,39 @@ fun ChatRoomScreenStateless(
                     .weight(1f)
                     .fillMaxWidth(),
                 reverseLayout = true,
-                contentPadding = PaddingValues(bottom = 8.dp)
+                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(uiState.messages.sortedByDescending { it.timestamp }) {
                     Column(modifier = Modifier.fillMaxWidth()) {
+                        val daysDifference =
+                            it.timestamp?.let { endDate -> getDateIntervalInDays(date, endDate) }
+
+                        currentDateLabelNotShowing.value =
+                            currentDateLabelDate.value != it.timestamp
+
+                        if (currentDateLabelNotShowing.value) {
+                            currentDateLabelNotShowing.value =
+                                currentDateLabelDate.value == it.timestamp
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = if (daysDifference?.toInt() == 0) "Today" else if (daysDifference?.toInt() == 1) "Yesterday" else getDateInstance(
+                                        DateFormat.RELATIVE
+                                    ).format(it.timestamp),
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+
+                            if (currentDateLabelDate.value != it.timestamp) {
+                                currentDateLabelDate.value = it.timestamp
+                            }
+                        }
+
                         MessageCard(
                             modifier = Modifier.align(if (it.senderId == uiState.senderId) Alignment.End else Alignment.Start),
                             message = it,
@@ -113,7 +157,8 @@ fun ChatRoomScreenStateless(
         ) {
             OutlinedTextField(
                 modifier = Modifier
-                    .weight(1f),
+                    .weight(1f)
+                    .height(48.dp),
                 value = uiState.message,
                 onValueChange = onMessageChange,
                 placeholder = {
@@ -124,17 +169,20 @@ fun ChatRoomScreenStateless(
                 },
                 singleLine = true,
                 maxLines = 1,
-                shape = MaterialTheme.shapes.medium,
+                shape = MaterialTheme.shapes.extraLarge,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             )
-            if (uiState.message.isNotEmpty()) {
-                Spacer(Modifier.width(8.dp))
-                FilledIconButton(onClick = onSendMessage) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = null)
-                }
+            Spacer(Modifier.width(8.dp))
+            FilledIconButton(
+                onClick = onSendMessage,
+                enabled = uiState.message.isNotBlank()
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = null)
             }
         }
     }
@@ -146,10 +194,13 @@ fun MessageCard(
     message: ChatMessage,
     isCurrentUserSender: Boolean
 ) {
+    val formattedTimestamp = getTimeInstance(DateFormat.SHORT).format(message.timestamp ?: Date())
+
     if (isCurrentUserSender) {
         Card(
             modifier = modifier
-                .padding(12.dp)
+                .padding(end = 8.dp)
+                .padding(vertical = 4.dp)
                 .widthIn(max = 250.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
@@ -162,9 +213,10 @@ fun MessageCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(Modifier.padding(vertical = 2.dp))
                 Text(
                     modifier = Modifier.align(Alignment.End),
-                    text = SimpleDateFormat("HH:mm").format(message.timestamp ?: Date()),
+                    text = formattedTimestamp,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -173,7 +225,8 @@ fun MessageCard(
     } else {
         Row(
             modifier = modifier
-                .padding(12.dp)
+                .padding(start = 8.dp)
+                .padding(vertical = 4.dp)
                 .widthIn(max = 250.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -220,19 +273,20 @@ fun MessageCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.inverseSurface)) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
                     Column(
                         modifier = Modifier.padding(12.dp),
                     ) {
                         Text(
-                            modifier = Modifier.align(Alignment.End),
+                            modifier = Modifier.align(Alignment.Start),
                             text = message.text,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.inverseOnSurface
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(Modifier.padding(vertical = 2.dp))
                         Text(
-                            modifier = Modifier.align(Alignment.Start),
-                            text = SimpleDateFormat("HH:mm").format(message.timestamp ?: Date()),
+                            modifier = Modifier.align(Alignment.End),
+                            text = formattedTimestamp,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -258,50 +312,58 @@ fun ChatRoomScreenLightPreview() {
 //        )
         val oldDate = Date()
         val instant = oldDate.toInstant()
+
+        val calendar = Calendar.getInstance()
+        calendar.apply {
+            set(Calendar.YEAR, 2025)
+            set(Calendar.MONTH, Calendar.DECEMBER)
+            set(Calendar.DAY_OF_MONTH, 4)
+        }
+
         ChatRoomScreenStateless(
             uiState = ChatRoomUiState(
                 senderId = "id",
-                message = "Hello",
+                message = "",
                 messages = listOf(
                     ChatMessage(
                         senderId = "id",
                         senderName = "Elvis Sosa",
-                        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                        text = stringResource(R.string.lorem_ipsum),
                         senderPhotoUri = "",
-                        timestamp = Date.from(instant.minusSeconds(90))
+                        timestamp = calendar.time
                     ),
                     ChatMessage(
                         senderId = "id1",
                         senderName = "Elvis Sosa",
-                        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                        text = stringResource(R.string.lorem_ipsum),
                         senderPhotoUri = "",
                         timestamp = Date.from(instant.minusSeconds(270))
                     ),
                     ChatMessage(
                         senderId = "id",
                         senderName = "Elvis Sosa",
-                        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                        text = stringResource(R.string.lorem_ipsum),
                         senderPhotoUri = "",
                         timestamp = Date.from(instant.minusSeconds(90))
                     ),
                     ChatMessage(
                         senderId = "id1",
                         senderName = "Elvis Sosa",
-                        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                        text = stringResource(R.string.lorem_ipsum),
                         senderPhotoUri = "",
                         timestamp = Date.from(instant.minusSeconds(270))
                     ),
                     ChatMessage(
                         senderId = "id",
                         senderName = "Elvis Sosa",
-                        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                        text = stringResource(R.string.lorem_ipsum),
                         senderPhotoUri = "",
                         timestamp = Date.from(instant.minusSeconds(90))
                     ),
                     ChatMessage(
                         senderId = "id1",
                         senderName = "Elvis Sosa",
-                        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                        text = stringResource(R.string.lorem_ipsum),
                         senderPhotoUri = "",
                         timestamp = Date.from(instant.minusSeconds(270))
                     )
@@ -329,7 +391,7 @@ fun ChatRoomScreenDarkPreview() {
         ChatRoomScreenStateless(
             uiState = ChatRoomUiState(
                 senderId = "id",
-                message = "Hello",
+                message = "",
                 messages = listOf(
                     ChatMessage(
                         senderId = "id",
@@ -343,7 +405,7 @@ fun ChatRoomScreenDarkPreview() {
                         senderName = "Elvis Sosa",
                         text = "Hello World",
                         senderPhotoUri = "",
-                        timestamp = Date.from(instant.minusSeconds(270))
+                        timestamp = Date.from(instant.minusSeconds(1000000))
                     )
                 )
             )

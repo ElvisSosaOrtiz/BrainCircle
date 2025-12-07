@@ -35,4 +35,5 @@
     <string name="create_group_screen_title">Create a new group</string>
     <string name="manage_group_screen_title">Manage this group</string>
     <string name="chat_room_screen_title">%1$s</string>
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</string>
 </resources>

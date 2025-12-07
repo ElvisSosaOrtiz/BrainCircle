@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -43,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.braincircle.R
 import com.example.braincircle.model.utils.DateUtils
 import com.example.braincircle.ui.theme.BrainCircleTheme
 import com.example.braincircle.view.common.ConfirmationModal
@@ -230,16 +232,24 @@ private fun GroupDetailsScreenStateless(
                         modalConfirmEvent = removeGroup
                         showConfirmationModal = true
                     },
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {
-                    Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
                 }
                 Spacer(Modifier.padding(horizontal = 8.dp))
                 FilledIconButton(
                     onClick = navToManageGroup,
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                 ) {
-                    Icon(imageVector = Icons.Filled.Edit, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
                 }
             }
         } else {
@@ -285,7 +295,7 @@ fun GroupDetailsScreenLightPreview() {
                 courseCode = "CODE-123",
                 courseTitle = "Course Title",
                 courseDept = "Course Department",
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                description = stringResource(R.string.lorem_ipsum),
                 locationName = "Location of meeting or class",
                 meetingDate = Date(),
                 isAdmin = true,
@@ -304,7 +314,7 @@ fun GroupDetailsScreenDarkPreview() {
                 courseCode = "CODE-123",
                 courseTitle = "Course Title",
                 courseDept = "Course Department",
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                description = stringResource(R.string.lorem_ipsum),
                 locationName = "Location of meeting or class",
                 meetingDate = Date(),
                 isAdmin = true,

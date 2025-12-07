@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.braincircle"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.coil.compose)
+    implementation(libs.kotlinx.datetime)
     ksp(libs.hilt.android.compiler)
     implementation(libs.play.services.auth)
     implementation(libs.firebase.auth.ktx)
