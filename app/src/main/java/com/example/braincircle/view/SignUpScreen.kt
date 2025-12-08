@@ -5,13 +5,17 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -69,128 +73,144 @@ fun SignUpScreen(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = topBar
     ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                modifier = Modifier.size(150.dp),
-                painter = painterResource(R.drawable.brain_circle_app_icon),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            EmailField(
-                value = uiState.email,
-                nextIsPassword = true,
-                enabled = !uiState.isLoading,
-                onValueChange = { viewModel.onEmailChange(it) }
-            )
-            if (uiState.emailValidationMessage.isNotEmpty()) {
-                Text(
-                    text = uiState.emailValidationMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(Modifier.padding(vertical = 8.dp))
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 48.dp),
-                shape = RoundedCornerShape(50.dp),
-                singleLine = true,
-                enabled = !uiState.isLoading,
-                value = uiState.username,
-                onValueChange = { viewModel.onUsernameChange(it) },
-                label = { Text(stringResource(R.string.username)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = stringResource(R.string.username)
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                )
-            )
-            if (uiState.usernameValidationMessage.isNotEmpty()) {
-                Text(
-                    text = uiState.usernameValidationMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(Modifier.padding(vertical = 8.dp))
-            PasswordField(
-                value = uiState.password,
-                nextIsPasswordRepeat = true,
-                enabled = !uiState.isLoading,
-                label = R.string.password,
-                onValueChange = { viewModel.onPasswordChange(it) }
-            )
-            if (uiState.passwordValidationMessage.isNotEmpty()) {
-                Text(
-                    modifier = Modifier.padding(horizontal = 48.dp),
-                    text = uiState.passwordValidationMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(Modifier.padding(vertical = 8.dp))
-            PasswordField(
-                value = uiState.repeatPassword,
-                nextIsPasswordRepeat = false,
-                enabled = !uiState.isLoading,
-                label = R.string.repeat_password,
-                onValueChange = { viewModel.onRepeatPasswordChange(it) }
-            )
-            if (uiState.repeatPasswordValidationMessage.isNotEmpty()) {
-                Text(
-                    text = uiState.repeatPasswordValidationMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(Modifier.padding(vertical = 16.dp))
-            FilledTonalButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 48.dp),
-                colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
-                elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
-                enabled = !uiState.isLoading,
-                onClick = { viewModel.signUp { onCreateAccountClick(uiState.username, uiState.photo?.toString() ?: "") } }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = modifier
+                    .matchParentSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator()
-                } else {
+                Image(
+                    modifier = Modifier.size(150.dp),
+                    painter = painterResource(R.drawable.brain_circle_app_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                EmailField(
+                    value = uiState.email,
+                    nextIsPassword = true,
+                    enabled = !uiState.isLoading,
+                    onValueChange = { viewModel.onEmailChange(it) }
+                )
+                if (uiState.emailValidationMessage.isNotEmpty()) {
                     Text(
-                        text = stringResource(R.string.create_account),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        text = uiState.emailValidationMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(Modifier.padding(vertical = 8.dp))
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 48.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    singleLine = true,
+                    enabled = !uiState.isLoading,
+                    value = uiState.username,
+                    onValueChange = { viewModel.onUsernameChange(it) },
+                    label = { Text(stringResource(R.string.username)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = stringResource(R.string.username)
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
+                )
+                if (uiState.usernameValidationMessage.isNotEmpty()) {
+                    Text(
+                        text = uiState.usernameValidationMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(Modifier.padding(vertical = 8.dp))
+                PasswordField(
+                    value = uiState.password,
+                    nextIsPasswordRepeat = true,
+                    enabled = !uiState.isLoading,
+                    label = R.string.password,
+                    onValueChange = { viewModel.onPasswordChange(it) }
+                )
+                if (uiState.passwordValidationMessage.isNotEmpty()) {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 48.dp),
+                        text = uiState.passwordValidationMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(Modifier.padding(vertical = 8.dp))
+                PasswordField(
+                    value = uiState.repeatPassword,
+                    nextIsPasswordRepeat = false,
+                    enabled = !uiState.isLoading,
+                    label = R.string.repeat_password,
+                    onValueChange = { viewModel.onRepeatPasswordChange(it) }
+                )
+                if (uiState.repeatPasswordValidationMessage.isNotEmpty()) {
+                    Text(
+                        text = uiState.repeatPasswordValidationMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(Modifier.padding(vertical = 16.dp))
+                FilledTonalButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 48.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
+                    elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
+                    enabled = !uiState.isLoading,
+                    onClick = {
+                        viewModel.signUp {
+                            onCreateAccountClick(
+                                uiState.username,
+                                uiState.photo?.toString() ?: ""
+                            )
+                        }
+                    }
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Text(
+                            text = stringResource(R.string.create_account),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+                OutlinedButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 48.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimaryContainer),
+                    enabled = !uiState.isLoading,
+                    onClick = onBackToSignInClick
+                ) {
+                    Text(
+                        text = stringResource(R.string.i_have_an_account),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
-            OutlinedButton(
+            Box(
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 48.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimaryContainer),
-                enabled = !uiState.isLoading,
-                onClick = onBackToSignInClick
-            ) {
-                Text(
-                    text = stringResource(R.string.i_have_an_account),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+                    .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            )
         }
         LaunchedEffect(uiState.errorMessage) {
             if (uiState.errorMessage.isNotEmpty()) {
