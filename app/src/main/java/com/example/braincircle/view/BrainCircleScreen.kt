@@ -185,7 +185,7 @@ fun BrainCircleAppBar(
                     text = stringResource(currentScreen.title, title)
                 )
             },
-            colors = TopAppBarDefaults.mediumTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             ),
             navigationIcon = {
@@ -253,13 +253,19 @@ fun NavigationDrawerContent(
                             .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
-                        val usernameSplit = username.split(" ")
-                        val initials = if (usernameSplit.size > 1) {
-                            usernameSplit
-                                .mapNotNull { it.firstOrNull()?.toString() }
-                                .reduce { acc, s -> acc + s }
+                        val initials = if (username.isNotBlank()) {
+                            val usernameSplit = username.trim().split(" ")
+                            if (usernameSplit.size > 1) {
+                                usernameSplit
+                                    .mapNotNull { it.firstOrNull()?.toString() }
+                                    .take(2)
+                                    .reduce { acc, s -> acc + s }
+                                    .uppercase()
+                            } else {
+                                username.take(2).uppercase()
+                            }
                         } else {
-                            "${username.getOrNull(0)}${username.getOrNull(1)}"
+                            ""
                         }
 
                         Text(
@@ -411,10 +417,8 @@ fun BrainCircleApp(
         composable(route = BrainCircleScreen.SignUp.name) {
             SignUpScreen(
                 onCreateAccountClick = { username, photo ->
+//                    viewModel.updateUserProfile(username, photo)
 //                    navigateToFindGroups()
-//                    viewModel.updateUserProfile()
-                    viewModel.reloadUser()
-                    viewModel.createUserDocument(username, photo)
                 },
                 onBackToSignInClick = {
                     navController.navigate(BrainCircleScreen.SignIn.name) {

@@ -7,6 +7,7 @@ import com.example.braincircle.model.data.User
 import com.example.braincircle.model.response.RepositoryResponse
 import com.example.braincircle.model.service.AuthRepository
 import com.example.braincircle.model.service.FirestoreRepository
+import com.example.braincircle.model.service.UserService
 import com.example.braincircle.view.common.isValidEmail
 import com.example.braincircle.view.common.isValidPassword
 import com.example.braincircle.view.common.passwordMatches
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val auth: AuthRepository,
-    private val firestore: FirestoreRepository
+    private val firestore: FirestoreRepository,
+    private val userService: UserService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignUpUiState())
@@ -105,7 +107,7 @@ class SignUpViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            auth.signUpWithEmail(email, password, username, photo)
+            userService.createUserFromAuth(email, password, username, photo)
                 .catch { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -115,17 +117,45 @@ class SignUpViewModel @Inject constructor(
                     }
                 }
                 .collect { response ->
-                    if (response != null) {
+                    if (response is RepositoryResponse.Success) {
                         navigateToFindGroups()
-                    } else {
+                    } else if (response is RepositoryResponse.Error) {
                         _uiState.update { currentState ->
                             currentState.copy(
-                                errorMessage = "Account creation failed",
+                                errorMessage = response.message,
                                 isLoading = false
                             )
                         }
                     }
                 }
+
+//            auth.signUpWithEmail(email, password, username, photo)
+//                .catch { e ->
+//                    _uiState.update { currentState ->
+//                        currentState.copy(
+//                            errorMessage = e.localizedMessage ?: "Account creation failed",
+//                            isLoading = false
+//                        )
+//                    }
+//                }
+//                .collect { response ->
+//                    if (response != null) {
+//                        val user = User(
+//                            uid = response.uid,
+//                            name = username,
+//                            email = email,
+//                            photoUri = photo
+//                        )
+//                        createUserDocument(user, navigateToFindGroups)
+//                    } else {
+//                        _uiState.update { currentState ->
+//                            currentState.copy(
+//                                errorMessage = "Account creation failed",
+//                                isLoading = false
+//                            )
+//                        }
+//                    }
+//                }
         }
         clearFields()
     }

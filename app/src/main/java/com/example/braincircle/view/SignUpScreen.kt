@@ -1,6 +1,7 @@
 package com.example.braincircle.view
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -174,10 +175,7 @@ fun SignUpScreen(
                     enabled = !uiState.isLoading,
                     onClick = {
                         viewModel.signUp {
-                            onCreateAccountClick(
-                                uiState.username,
-                                uiState.photo?.toString() ?: ""
-                            )
+                            onCreateAccountClick(uiState.username, (uiState.photo ?: Uri.EMPTY).toString())
                         }
                     }
                 ) {

@@ -52,39 +52,25 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signUpWithEmail(
         email: String,
-        password: String,
-        username: String,
-        photoUri: Uri?
-    ): Flow<FirebaseUser?> = callbackFlow {
+        password: String
+    ): Flow<RepositoryResponse> = callbackFlow {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    val profileUpdate = UserProfileChangeRequest.Builder()
-                        .setDisplayName(username)
-                        .setPhotoUri(photoUri)
-                        .build()
-                    user?.updateProfile(profileUpdate)
-                        ?.addOnCompleteListener { updateUserTask ->
-                            if (updateUserTask.isSuccessful) {
-                                user.reload().addOnCompleteListener { reloadTask ->
-                                    if (reloadTask.isSuccessful) {
-                                        trySend(user)
-                                    } else {
-                                        Log.e("AuthRepositoryImpl", reloadTask.exception?.localizedMessage ?: "Unknown error while reloading user")
-                                        trySend(null)
-                                    }
-                                }
-                            } else {
-                                Log.e("AuthRepositoryImpl", updateUserTask.exception?.localizedMessage ?: "Unknown error while updating user profile")
-                                trySend(null)
-                            }
-                        }
+                    trySend(RepositoryResponse.Success)
                 } else {
-                    Log.e("AuthRepositoryImpl", task.exception?.localizedMessage ?: "Unknown error while creating account")
-                    trySend(null)
+                    Log.e(
+                        "AuthRepositoryImpl",
+                        task.exception?.localizedMessage ?: "Unknown error while signing up"
+                    )
+                    trySend(
+                        RepositoryResponse.Error(
+                            message = task.exception?.localizedMessage
+                                ?: "Unknown error while signing up"
+                        )
+                    )
                 }
-            }
+            }.await()
         awaitClose()
     }
 
@@ -116,7 +102,8 @@ class AuthRepositoryImpl @Inject constructor(
                     )
                     trySend(null)
                 }
-            }
+            }?.await()
+        awaitClose()
     }
 
     override suspend fun signInWithGoogle(@ApplicationContext context: Context): Flow<RepositoryResponse> =
@@ -216,16 +203,6 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun reloadUser(): FirebaseUser? {
         auth.currentUser?.reload()?.await()
         return auth.currentUser
-
-//    override suspend fun getAuthStateFlow(): Flow<FirebaseUser?> = callbackFlow {
-//        auth.currentUser?.reload()?.addOnCompleteListener { task ->
-//            if (task.isSuccessful) {
-//                trySend(auth.currentUser)
-//            } else {
-//                trySend(null)
-//            }
-//        }
-//        awaitClose()
     }
 
     override fun signOut() = auth.signOut()

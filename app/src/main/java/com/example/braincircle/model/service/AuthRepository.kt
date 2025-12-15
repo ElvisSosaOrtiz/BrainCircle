@@ -10,13 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     suspend fun signInWithEmail(email: String, password: String): Flow<RepositoryResponse>
-    suspend fun signUpWithEmail(
-        email: String,
-        password: String,
-        username: String,
-        photoUri: Uri?
-    ): Flow<FirebaseUser?>
-
+    suspend fun signUpWithEmail(email: String, password: String): Flow<RepositoryResponse>
     suspend fun signInWithGoogle(@ApplicationContext context: Context): Flow<RepositoryResponse>
     suspend fun sendPasswordReset(email: String): Flow<RepositoryResponse>
     fun signOut()

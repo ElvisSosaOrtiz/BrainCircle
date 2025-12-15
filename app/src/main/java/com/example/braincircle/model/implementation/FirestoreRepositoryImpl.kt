@@ -14,6 +14,7 @@ import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 private const val TAG = "FirestoreRepositoryImpl"
@@ -336,7 +337,7 @@ class FirestoreRepositoryImpl @Inject constructor(
                         )
                     )
                 }
-            }
+            }.await()
         awaitClose()
     }
 
