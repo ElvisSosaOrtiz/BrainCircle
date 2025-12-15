@@ -55,9 +55,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SignInScreen(
     modifier: Modifier = Modifier,
-    onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
-    onSignInWithGoogleClick: () -> Unit,
     onResetPasswordClick: () -> Unit,
     viewModel: SignInViewModel = hiltViewModel(),
     topBar: @Composable () -> Unit
@@ -142,7 +140,7 @@ fun SignInScreen(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
-                    onClick = { viewModel.signInWithEmailAndPassword(onSignInClick) }
+                    onClick = viewModel::signInWithEmailAndPassword
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator()
@@ -180,7 +178,7 @@ fun SignInScreen(
                     colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                     elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
                     enabled = !uiState.isLoading,
-                    onClick = { viewModel.signInWithGoogle(context, onSignInWithGoogleClick) }
+                    onClick = { viewModel.signInWithGoogle(context) }
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(

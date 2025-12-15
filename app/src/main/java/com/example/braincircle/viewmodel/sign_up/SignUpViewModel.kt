@@ -3,10 +3,7 @@ package com.example.braincircle.viewmodel.sign_up
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.braincircle.model.data.User
 import com.example.braincircle.model.response.RepositoryResponse
-import com.example.braincircle.model.service.AuthRepository
-import com.example.braincircle.model.service.FirestoreRepository
 import com.example.braincircle.model.service.UserService
 import com.example.braincircle.view.common.isValidEmail
 import com.example.braincircle.view.common.isValidPassword
@@ -22,8 +19,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val auth: AuthRepository,
-    private val firestore: FirestoreRepository,
     private val userService: UserService
 ) : ViewModel() {
 
@@ -63,7 +58,7 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
-    fun signUp(navigateToFindGroups: () -> Unit) {
+    fun signUp() {
         clearMessages(isLoading = true)
 
         if (!email.isValidEmail()) {
@@ -117,9 +112,7 @@ class SignUpViewModel @Inject constructor(
                     }
                 }
                 .collect { response ->
-                    if (response is RepositoryResponse.Success) {
-                        navigateToFindGroups()
-                    } else if (response is RepositoryResponse.Error) {
+                    if (response is RepositoryResponse.Error) {
                         _uiState.update { currentState ->
                             currentState.copy(
                                 errorMessage = response.message,
@@ -128,64 +121,8 @@ class SignUpViewModel @Inject constructor(
                         }
                     }
                 }
-
-//            auth.signUpWithEmail(email, password, username, photo)
-//                .catch { e ->
-//                    _uiState.update { currentState ->
-//                        currentState.copy(
-//                            errorMessage = e.localizedMessage ?: "Account creation failed",
-//                            isLoading = false
-//                        )
-//                    }
-//                }
-//                .collect { response ->
-//                    if (response != null) {
-//                        val user = User(
-//                            uid = response.uid,
-//                            name = username,
-//                            email = email,
-//                            photoUri = photo
-//                        )
-//                        createUserDocument(user, navigateToFindGroups)
-//                    } else {
-//                        _uiState.update { currentState ->
-//                            currentState.copy(
-//                                errorMessage = "Account creation failed",
-//                                isLoading = false
-//                            )
-//                        }
-//                    }
-//                }
         }
         clearFields()
-    }
-
-    private suspend fun createUserDocument(user: User, navigateToFindGroups: () -> Unit) {
-        firestore.createUserProfile(user)
-            .catch { e ->
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        errorMessage = e.localizedMessage ?: "Error creating user document",
-                        isLoading = false
-                    )
-                }
-            }
-            .collect { response ->
-                when (response) {
-                    is RepositoryResponse.Success -> {
-                        navigateToFindGroups()
-                    }
-
-                    is RepositoryResponse.Error -> {
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                errorMessage = response.message,
-                                isLoading = false
-                            )
-                        }
-                    }
-                }
-            }
     }
 
     fun clearMessages(isLoading: Boolean = false) {

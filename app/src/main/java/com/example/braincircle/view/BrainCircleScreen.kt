@@ -392,16 +392,8 @@ fun BrainCircleApp(
         navController = navController,
         startDestination = startDestination!!
     ) {
-        val navigateToFindGroups = {
-            navController.navigate(BrainCircleScreen.FindGroups.name) {
-                popUpTo(BrainCircleScreen.SignIn.name) { inclusive = true }
-                launchSingleTop = true
-            }
-        }
         composable(route = BrainCircleScreen.SignIn.name) {
             SignInScreen(
-                onSignInClick = navigateToFindGroups,
-                onSignInWithGoogleClick = navigateToFindGroups,
                 onSignUpClick = { navController.navigate(BrainCircleScreen.SignUp.name) },
                 onResetPasswordClick = { navController.navigate(BrainCircleScreen.ResetPassword.name) },
                 topBar = {
@@ -416,10 +408,6 @@ fun BrainCircleApp(
         }
         composable(route = BrainCircleScreen.SignUp.name) {
             SignUpScreen(
-                onCreateAccountClick = { username, photo ->
-//                    viewModel.updateUserProfile(username, photo)
-//                    navigateToFindGroups()
-                },
                 onBackToSignInClick = {
                     navController.navigate(BrainCircleScreen.SignIn.name) {
                         popUpTo(BrainCircleScreen.SignUp.name) { inclusive = true }

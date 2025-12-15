@@ -45,7 +45,7 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun signInWithEmailAndPassword(navigateToFindGroups: () -> Unit) {
+    fun signInWithEmailAndPassword() {
         clearMessages(isLoading = true)
 
         if (!email.isValidEmail()) {
@@ -79,18 +79,12 @@ class SignInViewModel @Inject constructor(
                     }
                 }
                 .collect { response ->
-                    when (response) {
-                        is RepositoryResponse.Success -> {
-                            navigateToFindGroups()
-                        }
-
-                        is RepositoryResponse.Error -> {
-                            _uiState.update { currentState ->
-                                currentState.copy(
-                                    errorMessage = response.message,
-                                    isLoading = false
-                                )
-                            }
+                    if (response is RepositoryResponse.Error) {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                errorMessage = response.message,
+                                isLoading = false
+                            )
                         }
                     }
                 }
@@ -98,10 +92,7 @@ class SignInViewModel @Inject constructor(
         clearFields()
     }
 
-    fun signInWithGoogle(
-        @ApplicationContext context: Context,
-        navigateToFindGroups: () -> Unit
-    ) {
+    fun signInWithGoogle(@ApplicationContext context: Context) {
         clearMessages(isLoading = true)
 
         viewModelScope.launch {
@@ -117,7 +108,7 @@ class SignInViewModel @Inject constructor(
                 .collect { response ->
                     when (response) {
                         is RepositoryResponse.Success -> {
-                            createUserDocument(navigateToFindGroups)
+                            createUserDocument()
                         }
 
                         is RepositoryResponse.Error -> {
@@ -133,7 +124,7 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    private suspend fun createUserDocument(navigateToFindGroups: () -> Unit) {
+    private suspend fun createUserDocument() {
         val user = User(
             uid = auth.currentUser()!!.uid,
             name = auth.currentUser()!!.displayName!!,
@@ -150,18 +141,12 @@ class SignInViewModel @Inject constructor(
                 }
             }
             .collect { response ->
-                when (response) {
-                    is RepositoryResponse.Success -> {
-                        navigateToFindGroups()
-                    }
-
-                    is RepositoryResponse.Error -> {
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                errorMessage = response.message,
-                                isLoading = false
-                            )
-                        }
+                if (response is RepositoryResponse.Error) {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            errorMessage = response.message,
+                            isLoading = false
+                        )
                     }
                 }
             }

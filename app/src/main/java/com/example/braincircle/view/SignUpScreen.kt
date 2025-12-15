@@ -1,7 +1,6 @@
 package com.example.braincircle.view
 
 import android.annotation.SuppressLint
-import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -61,7 +60,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
-    onCreateAccountClick: (String, String) -> Unit,
     onBackToSignInClick: () -> Unit,
     viewModel: SignUpViewModel = hiltViewModel(),
     topBar: @Composable () -> Unit
@@ -173,11 +171,7 @@ fun SignUpScreen(
                     colors = ButtonDefaults.filledTonalButtonColors(MaterialTheme.colorScheme.onPrimaryContainer),
                     elevation = ButtonDefaults.filledTonalButtonElevation(8.dp),
                     enabled = !uiState.isLoading,
-                    onClick = {
-                        viewModel.signUp {
-                            onCreateAccountClick(uiState.username, (uiState.photo ?: Uri.EMPTY).toString())
-                        }
-                    }
+                    onClick = viewModel::signUp
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator()
